@@ -1,4 +1,4 @@
-# Travel Planner App ✈️
+# Travel Planner App 
 
 A fullstack web application for planning trips, managing travel details, and tracking expenses.
 The system allows users to organize trips, monitor costs, manage tasks, and view travel history in one place.
@@ -7,7 +7,7 @@ This project demonstrates fullstack development using a modern React frontend an
 
 ---
 
-## 🚀 Features
+## Features
 
 * Create and manage trips
 * View trip history (past trips)
@@ -19,7 +19,7 @@ This project demonstrates fullstack development using a modern React frontend an
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 ### Frontend
 
@@ -36,7 +36,7 @@ This project demonstrates fullstack development using a modern React frontend an
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 travel-app/
@@ -47,9 +47,9 @@ travel-app/
 
 ---
 
-## ⚙️ Run Locally
+## Run Locally
 
-### 1️⃣ Clone the repository
+### 1️) Clone the repository
 
 ```
 git clone https://github.com/IdanOshri98/travel-planner-app.git
@@ -58,7 +58,7 @@ cd travel-planner-app
 
 ---
 
-### 2️⃣ Run Backend Server
+### 2️) Run Backend Server
 
 ```
 cd backend
@@ -74,7 +74,7 @@ http://localhost:5000
 
 ---
 
-### 3️⃣ Run Frontend Application
+### 3️) Run Frontend Application
 
 Open a new terminal:
 
@@ -92,14 +92,14 @@ http://localhost:5173
 
 ---
 
-## 🔌 API Communication
+## API Communication
 
 The frontend communicates with the backend using REST API requests.
 Make sure the backend server is running before starting the frontend.
 
 ---
 
-## 🎯 Purpose of the Project
+## Purpose of the Project
 
 This project was built to practice and demonstrate:
 
@@ -112,7 +112,7 @@ This project was built to practice and demonstrate:
 
 ---
 
-## 🧠 Challenges & Learning
+## Challenges & Learning
 
 * Connecting frontend and backend services
 * Managing application state
@@ -122,7 +122,7 @@ This project was built to practice and demonstrate:
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
 * Full calendar functionality
 * UI/UX improvements
