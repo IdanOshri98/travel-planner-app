@@ -5,6 +5,12 @@ The system allows users to organize trips, monitor costs, manage tasks, and view
 
 This project demonstrates fullstack development using a modern React frontend and a Node.js backend with REST API architecture.
 
+## 🚧 Project Status
+
+This project is currently under active development.  
+New features such as calendar functionality and UI improvements are being added.
+
+
 ---
 
 ## Features
@@ -127,8 +133,7 @@ This project was built to practice and demonstrate:
 * Full calendar functionality
 * UI/UX improvements
 * Authentication system
-* Deployment to production environment
-* Performance optimizations
+* Deployment to production 
 
 ---
 
