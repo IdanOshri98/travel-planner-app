@@ -31,10 +31,11 @@ This project demonstrates fullstack development using a modern React frontend an
 * REST API
 
 ## Project Structure
-
+```
 travel-app/
-          frontend/   # React + Vite client application
-          backend/    # Node.js + Express server
+├── frontend/   # React + Vite client application
+└── backend/    # Node.js + Express server
+```
 
 ## Run Locally
 
