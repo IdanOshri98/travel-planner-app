@@ -135,4 +135,3 @@ This project was built to practice and demonstrate:
 ## 👤 Author
 
 Idan Oshri
-Computer Science Graduate — Ben-Gurion University
