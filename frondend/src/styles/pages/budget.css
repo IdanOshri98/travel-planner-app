@@ -1,0 +1,260 @@
+/* עמוד ניהול תקציב */
+.budget-management-page {
+  grid-area: main;
+  padding: var(--spacing-xl);
+  background: var(--bg-primary);
+  margin: var(--spacing-lg);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(10px);
+}
+
+.budget-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-md);
+}
+
+.budget-header h1 {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-bold);
+}
+
+.add-expense-btn {
+  display: inline-flex; 
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background: #8f1fcf;
+  color: white;
+  border-radius: var(--border-radius-md);
+  font-weight: bold;
+  border: none;
+}
+
+.add-expense-overlay {
+  position: fixed;
+  inset: 0;
+  margin: 0 ;
+  padding: 0;
+  background: rgba(0,0,0,0.5);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(5px);
+  z-index: 9999;
+}
+
+
+.add-expense-form {
+  background: var(--bg-primary);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-xl);
+  width: min(520px, 92vw);
+  max-height: 90vh;
+  overflow: auto;
+  position: fixed;
+  z-index: 10000;
+  border: 2px solid #333;
+  border-radius: 25px;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+}
+
+
+.back-btn {
+  order: -1; 
+  background: #738af0; 
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+}
+
+
+/* סיכום הוצאות */
+
+.summary {
+  display: flex;
+  gap: 20px; /* רווח ביניהם */
+  align-items: stretch; /* אותו גובה */
+}
+
+.summary > div {
+  flex: 1;
+}
+
+
+.expenses-summary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-xl);
+  margin: var(--spacing-xl) 0;
+  box-shadow: var(--shadow-xl);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.expenses-summary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+}
+
+.expenses-summary h2 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-semibold);
+  position: relative;
+  z-index: 1;
+  color: white;
+}
+
+.expenses-summary p {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin: 0;
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+  color: white;
+}
+
+/* סיכום משלמים */
+.payers-summary {
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
+  color: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-xl);
+  margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+  box-shadow: var(--shadow-xl);
+}
+
+.payers-summary h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.payers-summary h3::before {
+  content: "👥";
+  font-size: var(--font-size-lg);
+}
+
+.payers-summary p {
+  margin: var(--spacing-sm) 0;
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-lg);
+  backdrop-filter: blur(5px);
+}
+
+/* רשימת הוצאות */
+.expenses-list {
+  background: white;
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-md);
+  margin-top: var(--spacing-xl);
+}
+
+.expenses-list h2 {
+  color: var(--primary-color);
+  margin: 0 0 var(--spacing-lg) 0;
+  padding-bottom: var(--spacing-md);
+  border-bottom: 3px solid var(--bg-secondary);
+  font-size: var(--font-size-xxl);
+}
+
+/* מצב ריק */
+.expenses-list > p {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--spacing-xxl);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-lg);
+  border: 2px dashed var(--border-color);
+  font-size: var(--font-size-lg);
+}
+
+/* קבוצת תאריכים */
+.date-group {
+  margin-bottom: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.date-group h3 {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.daily-total {
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: 2px dashed var(--border-color);
+  text-align: right;
+  font-weight: var(--font-weight-bold);
+  color: var(--primary-color);
+  font-size: var(--font-size-lg);
+}
+
+@media (max-width: 768px) {
+  .budget-management-page {
+    margin: var(--spacing-md);
+    padding: var(--spacing-lg);
+  }
+  
+  .expenses-summary {
+    padding: var(--spacing-md);
+  }
+  
+  .expenses-list {
+    padding: var(--spacing-md);
+  }
+  
+  .expense-item {
+    padding: var(--spacing-md);
+  }
+  
+  .expense-item > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+  }
+  
+  .form-buttons button {
+    width: 100%;
+  }
+  
+  .expense-buttons {
+    flex-direction: column;
+  }
+}

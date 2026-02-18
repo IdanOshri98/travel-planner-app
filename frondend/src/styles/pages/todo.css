@@ -1,0 +1,47 @@
+/* עמוד רשימת משימות */
+.todo-page {
+  grid-area: main;
+  padding: var(--spacing-xl);
+  background: var(--bg-primary);
+  margin: var(--spacing-lg);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(10px);
+}
+
+.todo-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-xl);
+  gap: var(--spacing-md);
+}
+
+.todo-header h1 {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-bold);
+}
+
+/* רשימת משימות */
+.todos-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+/* רספונסיביות */
+@media (max-width: 768px) {
+  .todo-page {
+    margin: var(--spacing-md);
+    padding: var(--spacing-lg);
+  }
+  
+  .add-todo-form {
+    flex-direction: column;
+  }
+  
+  .todo-input {
+    margin-bottom: var(--spacing-sm);
+  }
+}
