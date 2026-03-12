@@ -2,6 +2,7 @@ import express from 'express';
 import tripsCtrl from '../controllers/trips.controller.js';
 import todosCtrl from '../controllers/todos.controller.js';
 import expensesCtrl from '../controllers/expenses.controller.js';
+import wordsCtrl from '../controllers/newWords.controller.js'
 
 const router = express.Router();
 
@@ -28,6 +29,13 @@ router.get('/:id/expenses', expensesCtrl.getExpenses);
 router.patch('/:tripId/expenses/:expenseId', expensesCtrl.patchExpense);
 router.delete('/:tripId/expenses/:expenseId', expensesCtrl.deleteExpense);
 router.get('/:id/payers', expensesCtrl.getPayers);
+
+
+// Words
+router.post('/:id/words', wordsCtrl.createWord);
+router.get('/:id/words', wordsCtrl.getWords);
+router.patch('/:tripId/words/:wordId', wordsCtrl.editWord);
+router.delete('/:tripId/words/:wordId', wordsCtrl.deleteWord);
 
 
 export default router;

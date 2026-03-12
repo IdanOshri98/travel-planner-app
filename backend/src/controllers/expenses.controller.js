@@ -7,7 +7,6 @@ const calculateDays = (start, end) => {
 }
 
 function createExpense(req, res) {
-  console.log("here");
   const tripId = Number(req.params.id);
   const trip = findTripById(tripId);
   if (!trip) return res.status(404).json({ message: 'Trip not found' });

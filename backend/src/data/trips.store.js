@@ -1,6 +1,6 @@
 let trips = [
-    { id: 1, destination: 'Thailand', todos: [], expenses: [], payers: [] },
-    { id: 2, destination: 'Mexico', todos: [], expenses: [], payers: [] }
+    { id: 1, destination: 'Thailand', todos: [], expenses: [], payers: [] , words: []},
+    { id: 2, destination: 'Mexico', todos: [], expenses: [], payers: [] , words: []}
 ];
 
 export function getTrips() {
@@ -31,11 +31,16 @@ export function setPayers(payers) {
   setPayers(payers);
 }
 
+export function nextWordId(trip){
+  return trip.words.length ? Math.max(...trip.words.map(e => e.id)) + 1 : 1;
+}
+
 export default {
   getTrips,
   setTrips,
   findTripById,
   nextTripId,
   nextTodoId,
-  nextExpenseId
+  nextExpenseId,
+  nextWordId
 };
