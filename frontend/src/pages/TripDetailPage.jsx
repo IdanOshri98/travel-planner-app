@@ -83,17 +83,11 @@ export default function TripDetailPage({tripId, onBack, onNavigateToPage, onEdit
             onClick={()=> onNavigateToPage('budget')}
             >💰 Budget Management</div>
         <div className="option-card"
-            onClick={()=> onNavigateToPage('schedule')}
+            onClick={()=> onNavigateToPage('TripCalendar')}
             >📅 Schedule</div>
-        <div className="option-card"
-            onClick={()=> onNavigateToPage('Cities')}
-            >🏙️ Cities</div>
         <div className="option-card"
             onClick={()=> onNavigateToPage('newWords')}
             >📚 New Words I Learned</div>
-        <div className="option-card"
-            onClick={()=> onNavigateToPage('notes')}
-            >📋 Notes</div>
       </div>
     </div>
 

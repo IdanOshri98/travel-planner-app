@@ -22,12 +22,17 @@ import './styles/components/animations.css';
 import './styles/pages/trip-detail.css';
 import './styles/pages/budget.css';
 import './styles/pages/todo.css';
+import "./styles/pages/calendar.css";
+import "./styles/pages/newWords.css";
+
 
 // ייבוא הקומפוננטים - נתיבים מתוקנים
 import TripDetailPage from './pages/TripDetailPage'
 import TodoListPage from './pages/TodoList'
 import BudgetManagement from './pages/Budget'
 
+import TripCalendar from "./pages/TripCalendar";
+import NewWordsPage from "./pages/newWords";
 
 
 
@@ -146,6 +151,7 @@ function App() {
   }
 
 
+
   return (
     <div className="app">
       {/* Header */}
@@ -227,7 +233,12 @@ function App() {
               trip={trips.find(t => t.id === currentTripId)} 
               onBack={() => setCurrentTripPage('overview')} 
             />
-          ) :null
+          ) : currentTripPage === 'newWords' ? (
+            <NewWordsPage
+              trip={trips.find(t => t.id === currentTripId)} 
+              onBack={() => setCurrentTripPage('overview')} 
+            /> 
+          ) : null
       ) : null}
 
       {/* Add Trip Modal */}

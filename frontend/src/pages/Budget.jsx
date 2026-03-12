@@ -46,11 +46,7 @@ console.log("BUDGET VERSION 123"); // מספר ייחודי
 
     if(!response.ok)  throw new Error('Failed to add expense')
       
-
-    console.log('POST payload:', newExpense);
-    console.log('response status:', response.status);
     const savedExpense = await response.json();
-    console.log('savedExpense from server:', savedExpense);
 
 
     setExpenses(prev => [...prev, savedExpense])

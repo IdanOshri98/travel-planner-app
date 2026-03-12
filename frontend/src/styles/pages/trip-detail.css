@@ -45,7 +45,7 @@
 /* אפשרויות טיול */
 .trip-options {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--spacing-lg);
   margin-top: var(--spacing-lg);
   margin-bottom: var(--spacing-lg);
