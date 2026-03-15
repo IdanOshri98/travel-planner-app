@@ -43,12 +43,12 @@ export default function TripCalendar({ onBack }) {
 
 
   useEffect(()=>{
-    async function loadEvents() {
+    async function fetchEvents() {
 
       if (DATA_MODE === "demo") {
-      const storedEvents = loadEvents();
-      setEvents(storedEvents.map(toFullCalendarEvent));
-      return;
+        const storedEvents = loadEvents();
+        setEvents(storedEvents.map(toFullCalendarEvent));
+        return;
     }
 
       try{
@@ -63,7 +63,7 @@ export default function TripCalendar({ onBack }) {
         console.error("Failed to load events:", err);
       }
     }
-    loadEvents();
+    fetchEvents();
   },[]);
 
 
