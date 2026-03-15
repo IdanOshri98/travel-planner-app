@@ -229,7 +229,7 @@ function App() {
                 }}
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 >
-                <span> 🌍{trip.destination} ({String(trip.id)}) </span>
+                <span> 🌍{trip.destination} </span>
                 <button
                   className="delete-btn"
                   onClick={(e) => {
