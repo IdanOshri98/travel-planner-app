@@ -1,14 +1,26 @@
-import { useState, useEffect } from 'react'
-
+import { useState, useEffect } from 'react';
+import { API_BASE, DATA_MODE } from "../config";
+import { loadTodos, saveTodos } from "../utils/todoStorage";
 
 export default function TodoListPage({trip, onBack}) {
 
   useEffect(() => {
-  fetch(`http://localhost:5000/trips/${trip.id}/todos`)
-    .then(res => res.json())
+    if(!trip?.id) return;
+
+    if (DATA_MODE === "demo") {
+      const storedTodos = loadTodos(trip.id);
+      setTodos(storedTodos);
+      return;
+    }
+
+  fetch(`${API_BASE}/trips/${trip.id}/todos`)
+    .then((res) => {
+      if (!res.ok) throw new Error('Failed to fetch todos');
+      return res.json();
+    })
     .then(data => setTodos(data))
     .catch(err => console.error('Error fetching todos:', err))
-}, [trip.id])
+}, [trip?.id])
 
   const [todos, setTodos] = useState([])
   const [newTodo, setNewTodo] = useState('')
@@ -19,8 +31,22 @@ export default function TodoListPage({trip, onBack}) {
 
     if (!newTodo.trim()) return 
     
+    const todoToAdd = {
+    id: crypto.randomUUID(),
+    text: newTodo.trim(),
+    completed: false,
+  };
+
+  if (DATA_MODE === "demo") {
+    const updatedTodos = [...todos, todoToAdd];
+    setTodos(updatedTodos);
+    saveTodos(trip.id, updatedTodos);
+    setNewTodo('');
+    return;
+  }
+
     try{
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/todos`, 
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/todos`, 
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -31,7 +57,6 @@ export default function TodoListPage({trip, onBack}) {
       if(!response.ok)  throw new Error('Failed to add todo')
       
       const savedTodo = await response.json()
-
       setTodos(prev => [...prev, savedTodo])
       setNewTodo('')
     } catch (error) {
@@ -43,11 +68,21 @@ export default function TodoListPage({trip, onBack}) {
   const toggleTodo = async (id) => {
 
     const todoToUpdate = todos.find(todo => todo.id === id)
-    if (!todoToUpdate) return
+    if (!todoToUpdate) return;
 
+    if (DATA_MODE === "demo") {
+    const updatedTodos = todos.map((todo) =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    );
+
+    setTodos(updatedTodos);
+    saveTodos(trip.id, updatedTodos);
+    return;
+  }
+  
     try{ 
 
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/todos/${id}`,
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/todos/${id}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -57,10 +92,8 @@ export default function TodoListPage({trip, onBack}) {
       if(!response.ok) throw new Error('Failed to toggle todo')
 
       const updatedTodo = await response.json()
-      
       setTodos(prev => 
       prev.map(todo => todo.id === id ? updatedTodo : todo  ))
-
     }catch (error) {
       console.error('Error toggling todo:', error)
     }  
@@ -71,10 +104,17 @@ export default function TodoListPage({trip, onBack}) {
   const deleteTodo = async (id) => {
 
     const todoToDelete = todos.find(todo => todo.id === id)
-    if (!todoToDelete) return
+    if (!todoToDelete) return;
+
+    if (DATA_MODE === "demo") {
+      const updatedTodos = todos.filter((todo) => todo.id !== id);
+      setTodos(updatedTodos);
+      saveTodos(trip.id, updatedTodos);
+      return;
+    }
 
     try {
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/todos/${id}`,
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/todos/${id}`,
         {  method: 'DELETE'  } )
 
       if(!response.ok) throw new Error('Failed to delete todo')

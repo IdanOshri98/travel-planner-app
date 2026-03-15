@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { API_BASE, DATA_MODE } from "../config";
+import { loadTrips } from "../utils/tripsStorage";
 
 export default function TripDetailPage({tripId, onBack, onNavigateToPage, onEditTrip}) {
   
@@ -16,8 +18,22 @@ export default function TripDetailPage({tripId, onBack, onNavigateToPage, onEdit
         setStatus('loading')
         setError("")
 
-        const response = await fetch(`http://localhost:5000/trips/${tripId}`,
-           { signal: controller.signal })
+        //DEMO
+        if (DATA_MODE === "demo") {
+          const storedTrips = loadTrips();
+          const foundTrip = storedTrips.find((t) => t.id === tripId);
+
+          if (!foundTrip) {
+            throw new Error("Trip not found");
+          }
+
+          setTrip(foundTrip);
+          setStatus("success");
+          return;
+      }
+
+        const response = await fetch(`${API_BASE}/trips/${tripId}`,
+          { signal: controller.signal });
 
         if (!response.ok) {
           throw new Error('Failed to fetch trip details')

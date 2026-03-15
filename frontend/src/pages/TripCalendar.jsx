@@ -4,8 +4,9 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import bootstrap5Plugin from "@fullcalendar/bootstrap5";
+import { API_BASE, DATA_MODE } from "../config";
+import { loadEvents, saveEvents } from "../utils/eventsStorage";
 
-const API_BASE = "http://localhost:5000/api";
 
 const COLOR_OPTIONS = [
   { label: "Blue", value: "#2563eb" },
@@ -43,6 +44,13 @@ export default function TripCalendar({ onBack }) {
 
   useEffect(()=>{
     async function loadEvents() {
+
+      if (DATA_MODE === "demo") {
+      const storedEvents = loadEvents();
+      setEvents(storedEvents.map(toFullCalendarEvent));
+      return;
+    }
+
       try{
         const res = await fetch(`${API_BASE}/events`);
         if(!res.ok){
@@ -84,11 +92,20 @@ export default function TripCalendar({ onBack }) {
     if (!canSave) return;
 
     const createdEvent={
+      id: crypto.randomUUID(),
       title: draft.title.trim(),
       start: draft.allDay ? draft.dateStr : `${draft.dateStr}T${draft.startTime}`,
       end: draft.allDay ? undefined : `${draft.dateStr}T${draft.endTime}`,
       allDay: draft.allDay,
       color: draft.color,
+    }
+
+    if (DATA_MODE === "demo") {
+      const updatedEvents = [...events, toFullCalendarEvent(createdEvent)];
+      setEvents(updatedEvents);
+      saveEvents(updatedEvents);
+      setIsOpen(false);
+      return;
     }
 
     try{
@@ -115,6 +132,14 @@ export default function TripCalendar({ onBack }) {
   }
 
   async function deleteEventById(id){
+
+    if (DATA_MODE === "demo") {
+      const updatedEvents = events.filter((e) => e.id !== id);
+      setEvents(updatedEvents);
+      saveEvents(updatedEvents);
+      return true;
+    }
+
     try{
       const res= await fetch(`${API_BASE}/events/${id}`,{ method: "DELETE" });
 

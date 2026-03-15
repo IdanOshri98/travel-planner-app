@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-
-const API_BASE = "http://localhost:5000/trips";
+import { API_BASE, DATA_MODE } from "../config";
+import { loadWords, saveWords } from "../utils/wordsStorage";
 
 function WordRow({ item, isOpen, onRatingChange, onToggleOpen, onDelete }) {
   return (
@@ -55,7 +55,14 @@ export default function NewWordsPage({ trip, onBack }) {
   useEffect(() => {
     if (!trip?.id) return;
 
-    fetch(`${API_BASE}/${trip.id}/words`)
+    // If we're in demo mode, load words from localStorage instead of API
+    if(DATA_MODE === "demo") {
+      const storeWords = loadWords(trip.id);
+      setWords(storeWords);
+      return;
+    }
+
+    fetch(`${API_BASE}/trips/${trip.id}/words`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch words");
         return res.json();
@@ -74,8 +81,20 @@ export default function NewWordsPage({ trip, onBack }) {
       translation: formData.get("translation"),
     };
 
+    // In demo mode, we save the new word to localStorage instead of sending it to the API
+    if(DATA_MODE === "demo") {
+      const wordWithId = { ...newWord, id: Date.now() };
+      const updatedWords = [...words, wordWithId];
+      saveWords(trip.id, updatedWords);
+      setWords(updatedWords);
+      setShowAddWordForm(false);
+      e.target.reset();
+      return;
+    }
+
+
     try {
-      const response = await fetch(`${API_BASE}/${trip.id}/words`, {
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/words`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newWord),
@@ -94,11 +113,24 @@ export default function NewWordsPage({ trip, onBack }) {
 
 
   const updateWordRating  = async (id, newRating) => {
+
+    // In demo mode, we update the word rating in localStorage instead of sending it to the API
+    if (DATA_MODE === "demo") {
+    const updatedWords = words.map((word) =>
+      word.id === id ? { ...word, rating: newRating } : word
+    );
+
+    setWords(updatedWords);
+    saveWords(trip.id, updatedWords);
+    return;
+  }
+
+
   const wordToUpdate = words.find(word => word.id === id)
-    if (!wordToUpdate) return
+    if (!wordToUpdate) return;
 
     try{ 
-      const response = await fetch(`${API_BASE}/${trip.id}/words/${id}`,
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/words/${id}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -119,8 +151,19 @@ export default function NewWordsPage({ trip, onBack }) {
 }
 
   const deleteWord = async (id) => {
+
+    // In demo mode, we delete the word from localStorage instead of sending a delete request to the API
+    if (DATA_MODE === "demo") {
+    const updatedWords = words.filter((w) => w.id !== id);
+    setWords(updatedWords);
+    saveWords(trip.id, updatedWords);
+
+    if (openWordId === id) setOpenWordId(null);
+    return;
+  }
+
     try {
-      const response = await fetch(`${API_BASE}/${trip.id}/words/${id}`, {
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/words/${id}`, {
         method: "DELETE",
       });
 

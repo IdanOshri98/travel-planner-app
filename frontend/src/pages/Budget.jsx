@@ -1,16 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { API_BASE, DATA_MODE } from "../config";
+import { loadExpenses, saveExpenses, getPayersSummary } from "../utils/expensesStorage";
 
 export default function BudgetManagement({trip, onBack}) {
 console.log("BUDGET VERSION 123"); // מספר ייחודי
 
   useEffect(() => {
-    fetch(`http://localhost:5000/trips/${trip.id}/expenses`)
-      .then(res => res.json())
-      .then(data => setExpenses(data))
-      .catch(err => console.error('Error fetching expenses:', err))
+    if (!trip?.id) return;
 
-      getPayers();
-  }, [trip.id])
+    //DEMO
+    if (DATA_MODE === "demo") {
+      const storedExpenses = loadExpenses(trip.id);
+      setExpenses(storedExpenses);
+      setPayers(getPayersSummary(storedExpenses));
+      return;
+    }
+
+    fetch(`${API_BASE}/trips/${trip.id}/expenses`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch expenses");
+        return res.json();
+      })
+      .then((data) => setExpenses(data))
+      .catch((err) => console.error("Error fetching expenses:", err));
+
+    getPayers();
+  }, [trip?.id]);
   
 
   const [expenses, setExpenses] = useState([])
@@ -25,20 +40,33 @@ console.log("BUDGET VERSION 123"); // מספר ייחודי
     e.preventDefault()
 
     const formData = new FormData(e.target)
-
+    const amount = parseFloat(formData.get('amount'));
     const newExpense = {
+          id: crypto.randomUUID(),
           description: formData.get('description'),       //תיאור
-          amount : parseFloat(formData.get('amount')),
+          amount : amount,
           currency : formData.get('currency'),            // מטבע - בינתיים הכל דולרים
           startDate : formData.get('date'),
           endDate : showEndDate ? formData.get('endDate') : null,
           repeat : showEndDate,
           category : formData.get('category'),
           payedBy : formData.get('payedBy'),
+          costPerDayUSD: amount,
         }
+
+    if (DATA_MODE === "demo") {
+      const updatedExpenses = [...expenses, newExpense];
+      setExpenses(updatedExpenses);
+      saveExpenses(trip.id, updatedExpenses);
+      setPayers(getPayersSummary(updatedExpenses));
+      setShowAddExpenseForm(false);
+      e.target.reset();
+      setShowEndDate(false);
+      return;
+  }
   
     try{
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/expenses`, {
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json'},
         body: JSON.stringify(newExpense)
@@ -47,24 +75,28 @@ console.log("BUDGET VERSION 123"); // מספר ייחודי
     if(!response.ok)  throw new Error('Failed to add expense')
       
     const savedExpense = await response.json();
-
-
     setExpenses(prev => [...prev, savedExpense])
     await getPayers();  // Refresh payers after adding expense
   }catch(err){
     console.error('Error adding expense:', err)
   }
 
-
     setShowAddExpenseForm(false)
     e.target.reset()
+    setShowEndDate(false);
   
 }
 
 const getPayers = async () => {
 
+  if (DATA_MODE === "demo") {
+    const storedExpenses = loadExpenses(trip.id);
+    setPayers(getPayersSummary(storedExpenses));
+    return;
+  }
+  
     try{
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/payers`, {
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/payers`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json'},
       })
@@ -74,12 +106,8 @@ const getPayers = async () => {
       const data = await response.json();
       console.log('payers response:', data);
       setPayers(Array.isArray(data) ? data : (data.payers || []));
-
-    }
-
-    catch(err){
-    console.error('Error getting payers:', err)
-    }
+    } catch(err){
+      console.error('Error getting payers:', err)}
 
 }
 
@@ -87,7 +115,7 @@ const getPayers = async () => {
 const getCategoryTotal = (category) => {
     return expenses
       .filter(exp => exp.category === category)
-      .reduce((sum, exp) => sum + parseFloat(exp.costPerDayUSD), 0)
+      .reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0)
       .toFixed(2)
 }
 
@@ -96,8 +124,29 @@ const editExpense = async (id) => {
   const expToUpdate = expenses.find(exp => exp.id === id)
     if (!expToUpdate) return
 
+  //DEMO
+  const normalizedExpense = {
+    ...expToUpdate,
+    ...editFormData,
+    amount: Number(editFormData.amount ?? expToUpdate.amount ?? 0),
+    costPerDayUSD: Number(editFormData.amount ?? expToUpdate.amount ?? 0),
+  };
+
+  if (DATA_MODE === "demo") {
+    const updatedExpenses = expenses.map((exp) =>
+      exp.id === id ? normalizedExpense : exp
+    );
+
+    setExpenses(updatedExpenses);
+    saveExpenses(trip.id, updatedExpenses);
+    setPayers(getPayersSummary(updatedExpenses));
+    setEditExpenseId(null);
+    setEditFormData({});
+    return;
+  }
+
     try{ 
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/expenses/${id}`,
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/expenses/${id}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -110,10 +159,9 @@ const editExpense = async (id) => {
 
       setExpenses(prev => 
                   prev.map(exp => exp.id === id ? updatedExpense : exp  ))
-
-        getPayers();
-        setEditExpenseId(null); 
-        setEditFormData({});
+      getPayers();
+      setEditExpenseId(null); 
+      setEditFormData({});
     }catch (error) {
       console.error('Error toggling expense:', error)
     }
@@ -124,16 +172,18 @@ const editExpense = async (id) => {
 
 
 const startEditing = (exp) => {
-    setEditExpenseId(exp.id)
-    setEditFormData({
-        description: exp.description,
-        costPerDayUSD: exp.amount,
-        category: exp.category,
-        payedBy: exp.payedBy,
-        startDate: exp.startDate,
-        endDate: exp.endDate,
-        repeat: exp.repeat
-    })
+  setEditExpenseId(exp.id)
+  setEditFormData({
+    description: exp.description,
+    amount: exp.amount,
+    category: exp.category,
+    payedBy: exp.payedBy,
+    startDate: exp.startDate,
+    endDate: exp.endDate || "",
+    repeat: exp.repeat,
+    currency: exp.currency,
+    costPerDayUSD: exp.costPerDayUSD ?? exp.amount,
+  })
 }
 
 
@@ -142,8 +192,17 @@ const deleteExpense = async (id) => {
      const expToDelete = expenses.find(exp => exp.id === id)
     if (!expToDelete) return
 
+    //DEMO
+    if (DATA_MODE === "demo") {
+      const updatedExpenses = expenses.filter((exp) => exp.id !== id);
+      setExpenses(updatedExpenses);
+      saveExpenses(trip.id, updatedExpenses);
+      setPayers(getPayersSummary(updatedExpenses));
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:5000/trips/${trip.id}/expenses/${id}`,
+      const response = await fetch(`${API_BASE}/trips/${trip.id}/expenses/${id}`,
         {  method: 'DELETE'  } )
 
       if(!response.ok) throw new Error('Failed to delete expense')
@@ -270,8 +329,8 @@ const deleteExpense = async (id) => {
       <h2>Expenses Summary</h2>
       <p>Total Expenses: 
         {expenses.length === 0 ? ' $0.00 = ₪0.00' :
-        ('$'+ expenses.reduce((sum,exp) =>  sum + parseFloat(exp.costPerDayUSD),0).toFixed(2)
-        + ' = ₪' + (expenses.reduce((sum,exp) =>  sum + parseFloat(exp.costPerDayUSD),0) * 3.5).toFixed(2) )}
+        ('$'+ expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0).toFixed(2)
+        + ' = ₪' + (expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0) * 3.5).toFixed(2) )}
         </p>
         <p> Accomodation: 
         {getCategoryTotal('accommodation')}
