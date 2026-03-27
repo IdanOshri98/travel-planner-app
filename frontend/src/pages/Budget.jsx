@@ -1,9 +1,31 @@
 import { useState, useEffect } from 'react';
-import { API_BASE, DATA_MODE } from "../config";
+import { DATA_MODE } from "../config";
 import { loadExpenses, saveExpenses, getPayersSummary } from "../utils/expensesStorage";
+import useExpenseStore from "../store/useExpenseStore";
+import useToastStore from "../store/useToastStore";
+import { fetchExpenses, createExpense, updateExpense, removeExpense, fetchPayersSummary } from "../services/expenseService";
+
 
 export default function BudgetManagement({trip, onBack}) {
-console.log("BUDGET VERSION 123"); // מספר ייחודי
+
+  const expenses = useExpenseStore(
+    (state) => state.expensesByTrip[trip.id] || []
+  );
+  const setExpenses = useExpenseStore((state) => state.setExpenses);
+  const addExpenseToStore = useExpenseStore((state) => state.addExpense);
+  const updateExpenseInStore = useExpenseStore((state) => state.updateExpense);
+  const deleteExpenseFromStore = useExpenseStore((state) => state.deleteExpense);
+  const payers = useExpenseStore(
+    (state) => state.payersByTrip[trip.id] || []
+  );
+  const setPayers = useExpenseStore((state) => state.setPayers);
+  const addToast = useToastStore((state) => state.addToast);
+
+  const [showAddExpenseForm, setShowAddExpenseForm] = useState(false)
+  const [showEndDate, setShowEndDate] = useState(false)
+  const [editingExpenseId, setEditExpenseId] = useState(null)
+  const [editFormData, setEditFormData] = useState({})
+
 
   useEffect(() => {
     if (!trip?.id) return;
@@ -11,54 +33,52 @@ console.log("BUDGET VERSION 123"); // מספר ייחודי
     //DEMO
     if (DATA_MODE === "demo") {
       const storedExpenses = loadExpenses(trip.id);
-      setExpenses(storedExpenses);
-      setPayers(getPayersSummary(storedExpenses));
+      setExpenses(trip.id, storedExpenses);
+      setPayers(trip.id, getPayersSummary(storedExpenses));
       return;
     }
 
-    fetch(`${API_BASE}/trips/${trip.id}/expenses`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch expenses");
-        return res.json();
-      })
-      .then((data) => setExpenses(data))
-      .catch((err) => console.error("Error fetching expenses:", err));
+    fetchExpenses(trip.id)
+      .then((data) => setExpenses(trip.id, data))
+      .catch((err) => {
+        console.error("Error fetching expenses:", err)
+        addToast({ message: "Error fetching expenses", type: "error" });
+      });
 
-    getPayers();
-  }, [trip?.id]);
+    fetchPayersSummary(trip.id)
+      .then((data) => setPayers(trip.id, data))
+      .catch((err) => {
+        console.error("Error fetching payers:", err)
+        addToast({ message: "Error fetching payers", type: "error" });
+    });
+
+    }, [trip?.id, setExpenses, setPayers, addToast]);
   
-
-  const [expenses, setExpenses] = useState([])
-  const [showAddExpenseForm, setShowAddExpenseForm] = useState(false)
-  const [showEndDate, setShowEndDate] = useState(false)
-  const [editingExpenseId, setEditExpenseId] = useState(null)
-  const [editFormData, setEditFormData] = useState({})
-  const [payers, setPayers] = useState([])
-
-
   const handleAddExpense = async (e) => {
     e.preventDefault()
 
     const formData = new FormData(e.target)
     const amount = parseFloat(formData.get('amount'));
+
     const newExpense = {
           id: crypto.randomUUID(),
-          description: formData.get('description'),       //תיאור
+          description: formData.get('description'),       
           amount : amount,
-          currency : formData.get('currency'),            // מטבע - בינתיים הכל דולרים
+          currency : formData.get('currency'),            
           startDate : formData.get('date'),
           endDate : showEndDate ? formData.get('endDate') : null,
           repeat : showEndDate,
           category : formData.get('category'),
-          payedBy : formData.get('payedBy'),
+          paidBy : formData.get('paidBy'),
           costPerDayUSD: amount,
         }
 
     if (DATA_MODE === "demo") {
-      const updatedExpenses = [...expenses, newExpense];
-      setExpenses(updatedExpenses);
+      addExpenseToStore(trip.id, newExpense);
+      const updatedExpenses = useExpenseStore.getState().expensesByTrip[trip.id];
       saveExpenses(trip.id, updatedExpenses);
-      setPayers(getPayersSummary(updatedExpenses));
+      await refreshPayers();
+      addToast({ message: "Expense added successfully", type: "success" });
       setShowAddExpenseForm(false);
       e.target.reset();
       setShowEndDate(false);
@@ -66,61 +86,23 @@ console.log("BUDGET VERSION 123"); // מספר ייחודי
   }
   
     try{
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/expenses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify(newExpense)
-      })
+      const savedExpense = await createExpense(trip.id, newExpense);
+      addExpenseToStore(trip.id, savedExpense);
+      await refreshPayers(); 
+      addToast({ message: "Expense added successfully", type: "success" }); 
 
-    if(!response.ok)  throw new Error('Failed to add expense')
-      
-    const savedExpense = await response.json();
-    setExpenses(prev => [...prev, savedExpense])
-    await getPayers();  // Refresh payers after adding expense
-  }catch(err){
-    console.error('Error adding expense:', err)
-  }
-
+    } catch (err){
+      console.error('Error adding expense:', err)
+      addToast({ message: 'Error adding expense', type: 'error' });
+    }
     setShowAddExpenseForm(false)
     e.target.reset()
     setShowEndDate(false);
   
 }
 
-const getPayers = async () => {
 
-  if (DATA_MODE === "demo") {
-    const storedExpenses = loadExpenses(trip.id);
-    setPayers(getPayersSummary(storedExpenses));
-    return;
-  }
-  
-    try{
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/payers`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json'},
-      })
-
-      if(!response.ok)  throw new Error('Failed to get payers')
-
-      const data = await response.json();
-      console.log('payers response:', data);
-      setPayers(Array.isArray(data) ? data : (data.payers || []));
-    } catch(err){
-      console.error('Error getting payers:', err)}
-
-}
-
-
-const getCategoryTotal = (category) => {
-    return expenses
-      .filter(exp => exp.category === category)
-      .reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0)
-      .toFixed(2)
-}
-
-
-const editExpense = async (id) => {
+const handleEditExpense = async (id) => {
   const expToUpdate = expenses.find(exp => exp.id === id)
     if (!expToUpdate) return
 
@@ -133,42 +115,94 @@ const editExpense = async (id) => {
   };
 
   if (DATA_MODE === "demo") {
-    const updatedExpenses = expenses.map((exp) =>
-      exp.id === id ? normalizedExpense : exp
-    );
-
-    setExpenses(updatedExpenses);
+    updateExpenseInStore(trip.id, id, normalizedExpense);
+    const updatedExpenses = useExpenseStore.getState().expensesByTrip[trip.id];
     saveExpenses(trip.id, updatedExpenses);
-    setPayers(getPayersSummary(updatedExpenses));
+    await refreshPayers();
+    addToast({ message: "Expense updated successfully", type: "success" });
     setEditExpenseId(null);
     setEditFormData({});
     return;
   }
 
     try{ 
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/expenses/${id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(editFormData)
-        }
-      )
-      if(!response.ok) throw new Error('Failed to toggle expense')
+      
+      const updatedExpense = await updateExpense(trip.id, id, editFormData);
+      updateExpenseInStore(trip.id, id, updatedExpense);
 
-      const updatedExpense = await response.json()
-
-      setExpenses(prev => 
-                  prev.map(exp => exp.id === id ? updatedExpense : exp  ))
-      getPayers();
+      await refreshPayers();
+      addToast({ message: "Expense updated successfully", type: "success" });
       setEditExpenseId(null); 
       setEditFormData({});
+
     }catch (error) {
       console.error('Error toggling expense:', error)
+      addToast({ message: 'Error updating expense', type: 'error' });
     }
 
-   
+}
+
+
+const handleDeleteExpense = async (id) => {
+     const expToDelete = expenses.find(exp => exp.id === id)
+    if (!expToDelete) return
+
+    //DEMO
+    if (DATA_MODE === "demo") {
+      deleteExpenseFromStore(trip.id, id);
+      const updatedExpenses = useExpenseStore.getState().expensesByTrip[trip.id];
+      saveExpenses(trip.id, updatedExpenses);
+      await refreshPayers();      
+      addToast({ message: "Expense deleted successfully", type: "success" });
+      return;
+    }
+
+    try {
+      await removeExpense(trip.id, id)
+      deleteExpenseFromStore(trip.id, id);
+
+      await refreshPayers();  
+      addToast({ message: "Expense deleted successfully", type: "success" });
+
+    }catch (error) {
+      console.error('Error deleting expense:', error)
+      addToast({ message: 'Error deleting expense', type: 'error' });
+    }
+}
+
+
+
+
+
+const refreshPayers = async () => {
+
+  if (!trip?.id) return;
+
+  if (DATA_MODE === "demo") {
+    const currentExpenses = useExpenseStore.getState().expensesByTrip[trip.id] || [];
+    setPayers(trip.id, getPayersSummary(currentExpenses));
+    return;
+  }
+  
+    try{
+      const data = await fetchPayersSummary(trip.id);
+      setPayers(trip.id, data);
+    } catch (err) {
+      console.error('Error getting payers:', err)
+      addToast({ message: 'Error refreshing payers summary', type: 'error' });
+    }
 
 }
+
+
+const getCategoryTotal = (category) => {
+    return expenses
+      .filter(exp => exp.category === category)
+      .reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0)
+      .toFixed(2)
+}
+
+
 
 
 const startEditing = (exp) => {
@@ -177,7 +211,7 @@ const startEditing = (exp) => {
     description: exp.description,
     amount: exp.amount,
     category: exp.category,
-    payedBy: exp.payedBy,
+    paidBy: exp.paidBy,
     startDate: exp.startDate,
     endDate: exp.endDate || "",
     repeat: exp.repeat,
@@ -187,33 +221,6 @@ const startEditing = (exp) => {
 }
 
 
-
-const deleteExpense = async (id) => {
-     const expToDelete = expenses.find(exp => exp.id === id)
-    if (!expToDelete) return
-
-    //DEMO
-    if (DATA_MODE === "demo") {
-      const updatedExpenses = expenses.filter((exp) => exp.id !== id);
-      setExpenses(updatedExpenses);
-      saveExpenses(trip.id, updatedExpenses);
-      setPayers(getPayersSummary(updatedExpenses));
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/expenses/${id}`,
-        {  method: 'DELETE'  } )
-
-      if(!response.ok) throw new Error('Failed to delete expense')
-
-      setExpenses(prev => prev.filter(exp => exp.id !== id))
-      await getPayers();  
-
-    }catch (error) {
-      console.error('Error deleting expense:', error)
-    }
-}
 
 
 
@@ -294,7 +301,7 @@ const deleteExpense = async (id) => {
       </select>
       
       <input 
-        name="payedBy" 
+        name="paidBy" 
         type="text" 
         placeholder="Who paid?"
       />
@@ -332,7 +339,7 @@ const deleteExpense = async (id) => {
         ('$'+ expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0).toFixed(2)
         + ' = ₪' + (expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0) * 3.5).toFixed(2) )}
         </p>
-        <p> Accomodation: 
+        <p> Accommodation: 
         {getCategoryTotal('accommodation')}
         </p>
         <p> Food: 
@@ -370,8 +377,8 @@ const deleteExpense = async (id) => {
                             placeholder="Amount"
                         />
                         <input
-                            value={editFormData.payedBy}
-                            onChange={(e)=> setEditFormData({...editFormData, payedBy: e.target.value})}
+                            value={editFormData.paidBy}
+                            onChange={(e)=> setEditFormData({...editFormData, paidBy: e.target.value})}
                             placeholder="Who paid?"
                         />
                         <input
@@ -397,15 +404,22 @@ const deleteExpense = async (id) => {
                         </select>
 
                         <div className = "inline-edit-buttons">
-                            <button onClick={()=> editExpense(exp.id)}>✅ Save</button>
-                            <button onClick={()=> setEditExpenseId(null)}>❌ Cancel</button>
-                        </div>
+                            <button onClick={()=> handleEditExpense(exp.id)}>✅ Save</button>
+                            <button
+                              onClick={() => {
+                                setEditExpenseId(null);
+                                setEditFormData({});
+                              }}
+                            >
+                              ❌ Cancel
+                            </button>
+                          </div>
                     </div>
                ) :(<>
           <div>
             <strong>{exp.description} - {exp.amount} {exp.currency} total</strong>
             {exp.repeat ? `${exp.startDate} until ${exp.endDate} - ${exp.costPerDayUSD}$ per day ` : ''} 
-             - Paid by {exp.payedBy} | {exp.category}  
+             - Paid by {exp.paidBy} | {exp.category}  
           </div>
           <div className="expense-buttons">
             <button 
@@ -416,7 +430,7 @@ const deleteExpense = async (id) => {
             </button>
             <button 
               className="delete-btn"
-              onClick={() => deleteExpense(exp.id)}
+              onClick={() => handleDeleteExpense(exp.id)}
             >
               🗑️ Delete
             </button>
@@ -441,3 +455,6 @@ const deleteExpense = async (id) => {
 
   )
 }
+
+
+

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { API_BASE, DATA_MODE } from './config';
 import { loadTrips, saveTrips } from './utils/tripsStorage';
+import ToastContainer from "./pages/ToastContainer";
+
 
 // ===== סטיילים בסיסיים =====
 import './styles/base/reset.css';
@@ -201,6 +203,7 @@ function App() {
 
   return (
     <div className="app">
+      <ToastContainer />
       {/* Header */}
       <header className="header">
         <button className="hamburger" onClick={toggleSidebar}>

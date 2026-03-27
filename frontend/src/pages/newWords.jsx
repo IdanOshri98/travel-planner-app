@@ -1,53 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
-import { API_BASE, DATA_MODE } from "../config";
+import { DATA_MODE } from "../config";
 import { loadWords, saveWords } from "../utils/wordsStorage";
+import useWordsStore from "../store/useWordsStore";
+import { fetchWords, createWord, updateWordRating, removeWord } from "../services/wordService";
 
-function WordRow({ item, isOpen, onRatingChange, onToggleOpen, onDelete }) {
-  return (
-    <div className="word-card" data-rating={item.rating}>
-      <div className="word-main">
-        <button
-          type="button"
-          className="word-btn"
-          onClick={onToggleOpen}
-          title="Click to show translation"
-        >
-          <div className="word-title">
-            <span className="word-text">{item.word}</span>
-          </div>
-
-          <div className={`translation ${isOpen ? "open" : ""}`}>
-            {isOpen ? item.translation : "tap to see translation"}
-          </div>
-        </button>
-
-        <div className="word-actions">
-          <label>Rate your knowledge (1 = don’t know, 5 = know well)</label>
-          <div className="btn-row">
-            <select 
-                name="rate" 
-                defaultValue={item.rating ?? 1}
-                onChange={(e) => onRatingChange(item.id, Number(e.target.value))}
-            >
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-            </select>
-
-            <button type="button" className="btn danger" onClick={onDelete}>
-              delete
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function NewWordsPage({ trip, onBack }) {
-  const [words, setWords] = useState([]);
+
+  const initialLanguage = trip?.destination || "unknown";
+  const [languageInput, setLanguageInput] = useState(initialLanguage);
+  const language = normalizeLanguage(languageInput.trim() || initialLanguage);
+  const words = useWordsStore((state) => state.wordsByLanguage[language] || []);
+
+  const setWords = useWordsStore((state) => state.setWords);
+  const addWordToStore = useWordsStore((state) => state.addWordToStore);
+  const updateWordInStore = useWordsStore((state) => state.updateWordInStore);
+  const deleteWordFromStore = useWordsStore((state) => state.deleteWordFromStore);
+
   const [showAddWordForm, setShowAddWordForm] = useState(false);
   const [openWordId, setOpenWordId] = useState(null);
   const [query, setQuery] = useState("");
@@ -57,19 +26,15 @@ export default function NewWordsPage({ trip, onBack }) {
 
     // If we're in demo mode, load words from localStorage instead of API
     if(DATA_MODE === "demo") {
-      const storeWords = loadWords(trip.id);
-      setWords(storeWords);
+      const storeWords = loadWords(normalizeLanguage(language));
+      setWords(language, storeWords);
       return;
     }
 
-    fetch(`${API_BASE}/trips/${trip.id}/words`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch words");
-        return res.json();
-      })
-      .then((data) => setWords(data))
+    fetchWords(trip.id)
+      .then((data) => setWords(language, data))
       .catch((err) => console.error("Error fetching words:", err));
-  }, [trip?.id]);
+  }, [trip?.id, setWords, language]);
 
   const handleAddNewWord = async (e) => {
     e.preventDefault();
@@ -84,26 +49,18 @@ export default function NewWordsPage({ trip, onBack }) {
     // In demo mode, we save the new word to localStorage instead of sending it to the API
     if(DATA_MODE === "demo") {
       const wordWithId = { ...newWord, id: Date.now() };
-      const updatedWords = [...words, wordWithId];
-      saveWords(trip.id, updatedWords);
-      setWords(updatedWords);
+      addWordToStore(language, wordWithId);
       setShowAddWordForm(false);
+      saveWords(normalizeLanguage(language), useWordsStore.getState().wordsByLanguage[language]);
       e.target.reset();
       return;
     }
 
 
     try {
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/words`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newWord),
-      });
 
-      if (!response.ok) throw new Error("Failed to add word");
-
-      const savedWord = await response.json();
-      setWords((prev) => [...prev, savedWord]);
+      const savedWord = await createWord(trip.id, newWord.word, newWord.translation);
+      addWordToStore(language, savedWord);
       setShowAddWordForm(false);
       e.target.reset();
     } catch (err) {
@@ -112,37 +69,23 @@ export default function NewWordsPage({ trip, onBack }) {
   };
 
 
-  const updateWordRating  = async (id, newRating) => {
+  const handleUpdateWordRating  = async (id, newRating) => {
 
     // In demo mode, we update the word rating in localStorage instead of sending it to the API
     if (DATA_MODE === "demo") {
-    const updatedWords = words.map((word) =>
-      word.id === id ? { ...word, rating: newRating } : word
-    );
-
-    setWords(updatedWords);
-    saveWords(trip.id, updatedWords);
-    return;
-  }
+      updateWordInStore(language, id, newRating);
+      const updatedWords = useWordsStore.getState().wordsByLanguage[language];
+      saveWords(normalizeLanguage(language), updatedWords);
+      return;
+    }
 
 
-  const wordToUpdate = words.find(word => word.id === id)
-    if (!wordToUpdate) return;
+  const wordToUpdate = words.find(word => word.id === id);
+  if (!wordToUpdate) return;
 
     try{ 
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/words/${id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({rating: newRating})
-        }
-      )
-      if(!response.ok) throw new Error('Failed to toggle word')
-
-      const updatedWord = await response.json()
-
-      setWords(prev => 
-                  prev.map(word => word.id === id ? updatedWord : word  ))
+      await updateWordRating(trip.id, id, newRating);
+      updateWordInStore(language, id, newRating);
 
     }catch (error) {
       console.error('Error toggling word:', error)
@@ -154,22 +97,17 @@ export default function NewWordsPage({ trip, onBack }) {
 
     // In demo mode, we delete the word from localStorage instead of sending a delete request to the API
     if (DATA_MODE === "demo") {
-    const updatedWords = words.filter((w) => w.id !== id);
-    setWords(updatedWords);
-    saveWords(trip.id, updatedWords);
-
-    if (openWordId === id) setOpenWordId(null);
-    return;
-  }
+      deleteWordFromStore(language, id);
+      if (openWordId === id) setOpenWordId(null);
+      const updatedWords = useWordsStore.getState().wordsByLanguage[language] || [];
+      saveWords(normalizeLanguage(language), updatedWords);
+      return;
+    }
 
     try {
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/words/${id}`, {
-        method: "DELETE",
-      });
+      await removeWord(trip.id, id);
+      deleteWordFromStore(language, id);
 
-      if (!response.ok) throw new Error("Failed to delete word");
-
-      setWords((prev) => prev.filter((w) => w.id !== id));
       if (openWordId === id) setOpenWordId(null);
     } catch (err) {
       console.error("Error deleting word:", err);
@@ -215,6 +153,16 @@ export default function NewWordsPage({ trip, onBack }) {
         >
           + Add Word
         </button>
+
+        <input
+          className="destination-language"
+          name = "language"
+          type="text"
+          placeholder="Destination Language"
+          value={languageInput}
+          onChange={(e) => setLanguageInput(e.target.value)}
+        />
+
       </div>
 
       {showAddWordForm && (
@@ -260,7 +208,7 @@ export default function NewWordsPage({ trip, onBack }) {
                 setOpenWordId((cur) => (cur === w.id ? null : w.id))
               }
               onDelete={() => deleteWord(w.id)}
-              onRatingChange={updateWordRating}
+              onRatingChange={handleUpdateWordRating}
             />
           ))
         )}
@@ -268,4 +216,52 @@ export default function NewWordsPage({ trip, onBack }) {
     </div>
   </div>
 );
+}
+
+function normalizeLanguage(language) {
+  return language.trim().toLowerCase();
+}
+
+function WordRow({ item, isOpen, onRatingChange, onToggleOpen, onDelete }) {
+  return (
+    <div className="word-card" data-rating={item.rating}>
+      <div className="word-main">
+        <button
+          type="button"
+          className="word-btn"
+          onClick={onToggleOpen}
+          title="Click to show translation"
+        >
+          <div className="word-title">
+            <span className="word-text">{item.word}</span>
+          </div>
+
+          <div className={`translation ${isOpen ? "open" : ""}`}>
+            {isOpen ? item.translation : "tap to see translation"}
+          </div>
+        </button>
+
+        <div className="word-actions">
+          <label>Rate your knowledge (1 = don’t know, 5 = know well)</label>
+          <div className="btn-row">
+            <select 
+                name="rate" 
+                defaultValue={item.rating ?? 1}
+                onChange={(e) => onRatingChange(item.id, Number(e.target.value))}
+            >
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+
+            <button type="button" className="btn danger" onClick={onDelete}>
+              delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

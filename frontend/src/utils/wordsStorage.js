@@ -1,10 +1,10 @@
-export function getWordsStorageKey(tripId) {
-  return `travel_app_words_${tripId}`;
+export function getWordsStorageKey(language) {
+  return `travel_app_words_${language}`;
 }
 
-export function loadWords(tripId) {
+export function loadWords(language) {
   try {
-    const raw = localStorage.getItem(getWordsStorageKey(tripId));
+    const raw = localStorage.getItem(getWordsStorageKey(language));
     return raw ? JSON.parse(raw) : [];
   } catch (error) {
     console.error("Failed to load words from localStorage:", error);
@@ -12,9 +12,9 @@ export function loadWords(tripId) {
   }
 }
 
-export function saveWords(tripId, words) {
+export function saveWords(language, words) {
   try {
-    localStorage.setItem(getWordsStorageKey(tripId), JSON.stringify(words));
+    localStorage.setItem(getWordsStorageKey(language), JSON.stringify(words));
   } catch (error) {
     console.error("Failed to save words to localStorage:", error);
   }

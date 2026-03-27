@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
-import { API_BASE, DATA_MODE } from "../config";
+import { DATA_MODE } from "../config";
 import { loadTodos, saveTodos } from "../utils/todoStorage";
 
+import useTodoStore from "../store/useTodoStore";
+import { fetchTodos, createTodo, updateTodo, removeTodo } from "../services/todoService";
+
+
 export default function TodoListPage({trip, onBack}) {
+
+  const [newTodo, setNewTodo] = useState('')
+  
+  const todos = useTodoStore((state) => state.todos);
+  const setTodos = useTodoStore((state) => state.setTodos);
+  const addTodoToStore = useTodoStore((state) => state.addTodoToStore);
+  const toggleTodoInStore = useTodoStore((state) => state.toggleTodoInStore);
+  const deleteTodoFromStore = useTodoStore((state) => state.deleteTodoFromStore);
 
   useEffect(() => {
     if(!trip?.id) return;
@@ -13,17 +25,11 @@ export default function TodoListPage({trip, onBack}) {
       return;
     }
 
-  fetch(`${API_BASE}/trips/${trip.id}/todos`)
-    .then((res) => {
-      if (!res.ok) throw new Error('Failed to fetch todos');
-      return res.json();
-    })
+  fetchTodos(trip.id)
     .then(data => setTodos(data))
     .catch(err => console.error('Error fetching todos:', err))
-}, [trip?.id])
+}, [trip?.id, setTodos])
 
-  const [todos, setTodos] = useState([])
-  const [newTodo, setNewTodo] = useState('')
 
 
   const addTodo = async (e) => {
@@ -38,26 +44,16 @@ export default function TodoListPage({trip, onBack}) {
   };
 
   if (DATA_MODE === "demo") {
-    const updatedTodos = [...todos, todoToAdd];
-    setTodos(updatedTodos);
-    saveTodos(trip.id, updatedTodos);
+    addTodoToStore(todoToAdd);
+    saveTodos(trip.id, useTodoStore.getState().todos);
     setNewTodo('');
     return;
   }
 
     try{
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/todos`, 
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({text: newTodo})
-        }
-      )
-
-      if(!response.ok)  throw new Error('Failed to add todo')
-      
-      const savedTodo = await response.json()
-      setTodos(prev => [...prev, savedTodo])
+        
+      const savedTodo = await createTodo(trip.id, newTodo.trim())
+      addTodoToStore(savedTodo)
       setNewTodo('')
     } catch (error) {
       console.error('Error adding todo:', error)
@@ -71,29 +67,17 @@ export default function TodoListPage({trip, onBack}) {
     if (!todoToUpdate) return;
 
     if (DATA_MODE === "demo") {
-    const updatedTodos = todos.map((todo) =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    );
-
-    setTodos(updatedTodos);
-    saveTodos(trip.id, updatedTodos);
-    return;
+      toggleTodoInStore(id);
+      saveTodos(trip.id, useTodoStore.getState().todos);
+      return;
   }
   
     try{ 
 
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/todos/${id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({completed: !todoToUpdate.completed})
-        }
-      )
-      if(!response.ok) throw new Error('Failed to toggle todo')
+      
 
-      const updatedTodo = await response.json()
-      setTodos(prev => 
-      prev.map(todo => todo.id === id ? updatedTodo : todo  ))
+      const updatedTodo = await updateTodo(trip.id, id, !todoToUpdate.completed)
+      setTodos(todos.map(todo => todo.id === id ? updatedTodo : todo  ))
     }catch (error) {
       console.error('Error toggling todo:', error)
     }  
@@ -103,23 +87,18 @@ export default function TodoListPage({trip, onBack}) {
 
   const deleteTodo = async (id) => {
 
-    const todoToDelete = todos.find(todo => todo.id === id)
-    if (!todoToDelete) return;
+    const exists= todos.find(todo => todo.id === id)
+    if (!exists) return;
 
     if (DATA_MODE === "demo") {
-      const updatedTodos = todos.filter((todo) => todo.id !== id);
-      setTodos(updatedTodos);
-      saveTodos(trip.id, updatedTodos);
+      deleteTodoFromStore(id);
+      saveTodos(trip.id, useTodoStore.getState().todos);
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE}/trips/${trip.id}/todos/${id}`,
-        {  method: 'DELETE'  } )
-
-      if(!response.ok) throw new Error('Failed to delete todo')
-
-      setTodos(prev => prev.filter(todo => todo.id !== id))
+      await removeTodo(trip.id, id)
+      deleteTodoFromStore(id)
 
     }catch (error) {
       console.error('Error deleting todo:', error)
