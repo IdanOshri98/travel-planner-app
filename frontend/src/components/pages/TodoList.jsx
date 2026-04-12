@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { DATA_MODE } from "../config";
-import { loadTodos, saveTodos } from "../utils/todoStorage";
+import { DATA_MODE } from "../../config";
+import { loadTodos, saveTodos } from "../../utils/todoStorage";
 
-import useTodoStore from "../store/useTodoStore";
-import { fetchTodos, createTodo, updateTodo, removeTodo } from "../services/todoService";
+import useTodoStore from "../../store/useTodoStore";
+import { fetchTodos, createTodo, updateTodo, removeTodo } from "../../services/todoService";
 
 
 export default function TodoListPage({trip, onBack}) {

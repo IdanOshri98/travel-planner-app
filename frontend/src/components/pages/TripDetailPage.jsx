@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { API_BASE, DATA_MODE } from "../config";
-import { loadTrips } from "../utils/tripsStorage";
+import { API_BASE, DATA_MODE } from "@/config";
+import { loadTrips } from "@/utils/tripsStorage";
 
 export default function TripDetailPage({tripId, onBack, onNavigateToPage, onEditTrip}) {
   

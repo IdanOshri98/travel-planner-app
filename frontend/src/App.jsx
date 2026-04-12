@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
-import { API_BASE, DATA_MODE } from './config';
-import { loadTrips, saveTrips } from './utils/tripsStorage';
-import ToastContainer from "./pages/ToastContainer";
+import ToastContainer from "./components/pages/ToastContainer";
+import AppHeader from './components/layout/AppHeader';
+import AddTripModal from './components/pages/AddTripModal';
+import MainContent from './components/layout/MainContent';
+
+import ConversationMode from '@/components/pages/ConversationMode';
+import { useTrips } from './hooks/useTrips';
 
 
 // ===== סטיילים בסיסיים =====
@@ -12,7 +16,7 @@ import './styles/base/layout.css';
 
 // ===== מבנה עמוד =====
 import './styles/layout/header.css';
-import './styles/layout/sidebar.css';
+import './styles/layout/tripList.css';
 import './styles/layout/responsive.css';
 
 // ===== רכיבים =====
@@ -28,51 +32,25 @@ import './styles/pages/budget.css';
 import './styles/pages/todo.css';
 import "./styles/pages/calendar.css";
 import "./styles/pages/newWords.css";
-
-
-// ייבוא הקומפוננטים - נתיבים מתוקנים
-import TripDetailPage from './pages/TripDetailPage';
-import TodoListPage from './pages/TodoList';
-import BudgetManagement from './pages/Budget';
-
-import TripCalendar from "./pages/TripCalendar";
-import NewWordsPage from "./pages/newWords";
+import "./styles/pages/homePage.css";
+import "./styles/pages/conversationMode.css";
 
 
 
 function App() {
   // State for sidebar open/closed
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [showAddTripModal, setShowAddTripModal] = useState(false)
-  const [currentTripId, setCurrentTripId] = useState(null)
-  const [currentView, setCurrentView] = useState('home') 
-  const [currentTripPage, setCurrentTripPage] = useState('overview') 
-  const [editingTrip, setEditingTrip] = useState(null)
+  const [showAddTripModal, setShowAddTripModal] = useState(false);
+  const [currentTripId, setCurrentTripId] = useState(null);
+  const [currentView, setCurrentView] = useState('home');
+  const [currentTripPage, setCurrentTripPage] = useState('overview');
+  const [editingTrip, setEditingTrip] = useState(null);
+  const { trips, addTrip, editTrip, deleteTrip } = useTrips();
 
-  // Sample trips data
-  const [trips, setTrips] = useState([])
+  const [showConversation, setShowConversation] = useState(false);
 
-  useEffect(() => {
-    //Demo
-    if (DATA_MODE === 'demo') {
-    const storedTrips = loadTrips();
-    setTrips(storedTrips);
-    return;
-  }
 
-    // Fetch trips data from an API or local storage if needed
-    fetch(`${API_BASE}/trips`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch trips');
-        return res.json();
-      })
-      .then(data => setTrips(data))
-      .catch(err => console.error('Error fetching trips:', err))
-  }, [])
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen)
-  }
+
 
   const handleAddTrip = async (e) => {
     e.preventDefault()
@@ -86,38 +64,14 @@ function App() {
       travelers: formData.get('travelers')
     }
 
-    //Demo
-    if (DATA_MODE === 'demo') {
-      const updatedTrips = [newTrip, ...trips];
-      setTrips(updatedTrips);
-      saveTrips(updatedTrips);
-      setShowAddTripModal(false);
-      return;
-    }
-
-    try {
-      // Send new trip data to the backend API
-      const response = await fetch(`${API_BASE}/trips`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newTrip)
-      })
-      if (!response.ok) throw new Error('Failed to add trip');
- 
-      const savedTrip = await response.json();
-      setTrips(prev => [savedTrip, ...prev])
-      setShowAddTripModal(false)
-   } catch (error) {
-      console.error('Error adding trip:', error)
-    }
-  }
+    addTrip(newTrip)
+    setShowAddTripModal(false)
+  };
 
 
 
 
-  const handleEditTrip = async (e) => {    //////אולי להוריד את זה בהמשך - אני לא רוצה לאפשר עריכה כאן
+  const handleEditTrip = async (e) => {    
     e.preventDefault()
     const formData = new FormData(e.target)
     const updatedTrip = {
@@ -128,224 +82,73 @@ function App() {
       travelers: formData.get('travelers')
     }
 
-    if (DATA_MODE === 'demo') {
-      const updatedTrips = trips.map((trip) =>
-        trip.id === editingTrip.id ? { ...trip, ...updatedTrip } : trip
-      );
-
-      setTrips(updatedTrips);
-      saveTrips(updatedTrips);
-      setEditingTrip(null);
-      setShowAddTripModal(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE}/trips/${editingTrip.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updatedTrip)
-      });
-
-      if(!response.ok) throw new Error('Failed to update trip')
-
-      const updated = await response.json();
-      setTrips(prev => prev.map(trip => (trip.id === updated.id ? updated : trip)))
-      setEditingTrip(null)
-      setShowAddTripModal(false)
-    }
-    catch (error) {
-      console.error('Error updating trip:', error)
-    }
+    editTrip(editingTrip.id, updatedTrip);
+    setShowAddTripModal(false);
+    setEditingTrip(null);
   }
-
+  
 
 
   const handleDeleteTrip = async (id) => {
-
     if (!window.confirm('Delete this trip?')) return;
-
-    if (DATA_MODE === 'demo') {
-      const updatedTrips = trips.filter((trip) => trip.id !== id);
-      setTrips(updatedTrips);
-      saveTrips(updatedTrips);
-
-      if (currentTripId === id) {
-        setCurrentTripId(null);
-        setCurrentView('home');
-        setCurrentTripPage('overview');
-      }
-      return;
-    }
-
-    try{
-      const response = await fetch(`${API_BASE}/trips/${id}`, {
-        method: 'DELETE'
-      });
-
-      if(!response.ok)  throw new Error('Failed to delete trip')
-      
-      setTrips(prev => prev.filter(trip => trip.id !== id));
-
-      if(currentTripId === id) {
-        setCurrentTripId(null)
-        setCurrentView('home')
-        setCurrentTripPage('overview')
-      }
-    } catch (error) {
-      console.error('Error deleting trip:', error)
-    }
-  }
+    deleteTrip(id)
+  };
 
 
+  const openAddTripModal = () => {
+      setEditingTrip(null);
+      setShowAddTripModal(true);
+  };
 
+  const openConversation = (trip) => {
+    console.log("openConversation clicked");
+      setCurrentTripId(trip.id);
+      setShowConversation(true);
+  };
+
+  const selectTrip = (id) => {
+    setCurrentTripId(id);
+    setCurrentView('tripDetail');
+  };
+
+console.log("showConversation:", showConversation);
   return (
     <div className="app">
       <ToastContainer />
-      {/* Header */}
-      <header className="header">
-        <button className="hamburger" onClick={toggleSidebar}>
-          ☰
-        </button>
-        <h1 className="website-name">MY AWESOME TRAVEL APP</h1>
-      </header>
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-        <button className="add-trip-btn"
-        onClick={() => 
-          {setEditingTrip(null);
-          setShowAddTripModal(true)}}
-        >
-          + Add Trip </button>
-        <div className="trips-list">
-          {trips.map((trip, index) => (
-            <div 
-                key={trip.id || index}
-                className="trip-item"
-                onClick={() => {
-                  setCurrentTripId(trip.id)
-                  setCurrentView('tripDetail')
-                  setSidebarOpen(false) 
-                }}
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                <span> 🌍{trip.destination} </span>
-                <button
-                  className="delete-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteTrip(trip.id)
-                  }}
-                >
-                  🗑️
-                </button>
-            </div>
-          ))}
-        </div>
-      </aside>
-
+      <AppHeader  />
       
       {/* Main Map Area */}
-      {currentView === 'home' ? (
-        <main className="map-area">
-          <img 
-              src="/worldmap.png" 
-              alt="World Map" 
-              className="world-map-image"
-          />
-        </main>
-      ) : currentView === 'tripDetail' ? (
-          currentTripPage === 'overview' ? (
-            <TripDetailPage 
-              tripId={currentTripId} 
-              onBack={() => setCurrentView('home')}
-              onNavigateToPage={setCurrentTripPage}
-              onEditTrip={(trip) => {
-                setEditingTrip(trip)
-                setShowAddTripModal(true)
-              }}
-            />
-          ) : currentTripPage === 'todoList' ? (
-            <TodoListPage 
-              trip={trips.find(t => t.id === currentTripId)} 
-              onBack={() => setCurrentTripPage('overview')}
-            />
-          ) : currentTripPage === 'budget' ? (
-            <BudgetManagement
-              trip={trips.find(t => t.id === currentTripId)} 
-              onBack={() => setCurrentTripPage('overview')} 
-            />
-          ) : currentTripPage === 'TripCalendar' ? (
-            <TripCalendar
-              trip={trips.find(t => t.id === currentTripId)} 
-              onBack={() => setCurrentTripPage('overview')} 
-            />
-          ) : currentTripPage === 'newWords' ? (
-            <NewWordsPage
-              trip={trips.find(t => t.id === currentTripId)} 
-              onBack={() => setCurrentTripPage('overview')} 
-            /> 
-          ) : null
-      ) : null}
+      <MainContent
+        currentView={currentView}
+        currentTripPage={currentTripPage}
+        trips={trips}
+        currentTripId={currentTripId}
+        setCurrentView={setCurrentView}
+        setCurrentTripPage={setCurrentTripPage}
+        setEditingTrip={setEditingTrip}
+        selectTrip={selectTrip}
+        handleDeleteTrip={handleDeleteTrip}
+        setShowAddTripModal={setShowAddTripModal}
+        setShowConversation={setShowConversation}
+        openAddTripModal={openAddTripModal}
+        openConversation={openConversation}
+      />
 
       {/* Add Trip Modal */}
-      {showAddTripModal && (
-        <div className="modal-overlay" onClick={() => setShowAddTripModal(false)}>   
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingTrip ? 'Edit Trip' : 'Add New Trip'}</h2>
-            <form onSubmit={editingTrip ? handleEditTrip : handleAddTrip}>
-              <input 
-                name="destination" 
-                type="text" 
-                placeholder="Destination" 
-                defaultValue={editingTrip?.destination || ''}
-                required 
-              />
-              <label>Start Date:</label>
-              <input 
-                name="startDate"
-                type="text" 
-                placeholder="DD/MM/YYYY (e.g., 15/03/2024)" 
-                pattern="\d{2}/\d{2}/\d{4}"
-                defaultValue={editingTrip?.startDate || ''}
-                required
-              />
-              <label>End Date:</label>
-              <input 
-                name="endDate"
-                type="text" 
-                placeholder="DD/MM/YYYY (e.g., 22/03/2024)" 
-                pattern="\d{2}/\d{2}/\d{4}"
-                defaultValue={editingTrip?.endDate || ''}
-                required
-              />
-              <input 
-                name="budget" 
-                type="number" 
-                placeholder="Budget ($)" 
-                defaultValue={editingTrip?.budget || ''}
-              />
-              <select name="travelers" defaultValue={editingTrip?.travelers || "1 Person"} required>
-                <option value="1 Person">1 Person</option>
-                <option value="2 People">2 People</option>
-                <option value="3 People">3 People</option>
-                <option value="4+ People">4+ People</option>
-              </select>
-              <div className="modal-buttons">
-                <button type="button" onClick={() => setShowAddTripModal(false)}>
-                  Cancel
-                </button>
-                <button type="submit">
-                  Add Trip
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddTripModal
+        isOpen={showAddTripModal}
+        editingTrip={editingTrip}
+        onClose={() => setShowAddTripModal(false)}
+        onSubmit={editingTrip ? handleEditTrip : handleAddTrip}
+      />
+
+      <ConversationMode
+        isOpen={showConversation}
+        onClose={() => setShowConversation(false)}
+        destination={trips.find(t => t.id === currentTripId)?.destination}
+      />
+      
     </div>
   )
 }

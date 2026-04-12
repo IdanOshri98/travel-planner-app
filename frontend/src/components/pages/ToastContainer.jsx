@@ -1,5 +1,5 @@
-import useToastStore from "../store/useToastStore";
-import "../styles/components/Toast.css";
+import useToastStore from "@/store/useToastStore";
+import "@/styles/components/Toast.css";
 
 export default function ToastContainer() {
   const toasts = useToastStore((state) => state.visibleToasts);

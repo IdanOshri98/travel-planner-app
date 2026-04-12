@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { DATA_MODE } from "../config";
-import { loadExpenses, saveExpenses, getPayersSummary } from "../utils/expensesStorage";
-import useExpenseStore from "../store/useExpenseStore";
-import useToastStore from "../store/useToastStore";
-import { fetchExpenses, createExpense, updateExpense, removeExpense, fetchPayersSummary } from "../services/expenseService";
+import { DATA_MODE } from "../../config";
+import { loadExpenses, saveExpenses, getPayersSummary } from "../../utils/expensesStorage";
+import useExpenseStore from "../../store/useExpenseStore";
+import useToastStore from "../../store/useToastStore";
+import { fetchExpenses, createExpense, updateExpense, removeExpense, fetchPayersSummary } from "../../services/expenseService";
 
 
 export default function BudgetManagement({trip, onBack}) {

@@ -51,29 +51,6 @@
   margin-bottom: var(--spacing-lg);
 }
 
-/* מפה */
-.map-area {
-  grid-area: main;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  overflow: hidden;
-  position: relative;
-}
-
-.world-map-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-xl);
-}
-
-
 
 @media (max-width: 768px) {
   .trip-detail-page {

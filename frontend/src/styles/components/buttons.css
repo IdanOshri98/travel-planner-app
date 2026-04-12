@@ -113,8 +113,22 @@
   transition: all var(--transition-normal);
 }
 
+.conversation-btn:hover {
+  background: linear-gradient(135deg, var(--border-color), var(--bg-secondary));
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+
+}
+
 .edit-btn:hover,
-.delete-btn:hover {
+.delete-btn:hover,
+.conversation-btn:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: var(--shadow-md);
 }

@@ -1,0 +1,98 @@
+.home-container {
+  width: 100%;
+  min-height: calc(100vh - 70px);
+  padding: 48px 32px 32px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 28px;
+
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.home-hero {
+  width: 100%;
+  max-width: 820px;
+  text-align: center;
+}
+
+/* כותרת ראשית */
+.home-hero h1 {
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  margin-bottom: 12px;
+  line-height: 1.2;
+
+  /* אפקט גרדיאנט לטקסט */
+  background: linear-gradient(90deg, #0b7dff, #032d64);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  letter-spacing: -0.5px;
+}
+
+/* טקסט מתחת לכותרת */
+.home-hero p {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 400;
+}
+
+/* כותרת "Your Trips" */
+.home-trips-section h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  text-align: center;
+  position: relative;
+  color: rgb(50, 0, 230);
+  letter-spacing: 0.3px;
+}
+
+/* קו דקורטיבי מתחת לכותרת */
+.home-trips-section h2::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg,  #0b7dff, rgba(255,255,255,0.4));
+}
+
+/* רספונסיבי */
+@media (max-width: 768px) {
+  .home-hero h1 {
+    font-size: 2rem;
+  }
+
+  .home-trips-section h2 {
+    font-size: 1.4rem;
+  }
+}
+
+.home-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.fact-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 20px;
+  color: white;
+}
+
+.fact-card h3 {
+  color: var(--primary-color);
+}
+
+.fact-card button {
+  margin-top: 10px;
+}

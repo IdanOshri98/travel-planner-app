@@ -4,8 +4,8 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import bootstrap5Plugin from "@fullcalendar/bootstrap5";
-import { API_BASE, DATA_MODE } from "../config";
-import { loadEvents, saveEvents } from "../utils/eventsStorage";
+import { API_BASE, DATA_MODE } from "../../config";
+import { loadEvents, saveEvents } from "../../utils/eventsStorage";
 
 
 const COLOR_OPTIONS = [

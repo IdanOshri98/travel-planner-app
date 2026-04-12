@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { DATA_MODE } from "../config";
-import { loadWords, saveWords } from "../utils/wordsStorage";
-import useWordsStore from "../store/useWordsStore";
-import { fetchWords, createWord, updateWordRating, removeWord } from "../services/wordService";
+import { DATA_MODE } from "../../config";
+import { loadWords, saveWords } from "../../utils/wordsStorage";
+import useWordsStore from "../../store/useWordsStore";
+import { fetchWords, createWord, updateWordRating, removeWord } from "../../services/wordService";
 
 
 export default function NewWordsPage({ trip, onBack }) {

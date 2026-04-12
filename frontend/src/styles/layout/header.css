@@ -10,25 +10,6 @@
   backdrop-filter: blur(10px);
 }
 
-.hamburger {
-  background: none;
-  border: none;
-  font-size: var(--font-size-xxl);
-  cursor: pointer;
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  transition: background var(--transition-normal);
-  color: var(--primary-color);
-}
-
-.hamburger:hover {
-  background: var(--bg-accent);
-  transform: scale(1.05);
-}
-
-.hamburger:active {
-  transform: scale(0.95);
-}
 
 .website-name {
   margin-left: var(--spacing-lg);
