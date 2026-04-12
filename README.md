@@ -2,9 +2,9 @@
 
 A full-stack web application for planning and managing trips.
 
-The system allows users to organize trips, track expenses, manage tasks, and visualize travel plans in a calendar.
+The system allows users to organize trips, track expenses, manage tasks, visualize travel plans in a calendar — and includes **AI-powered travel assistance**.
 
-This project demonstrates full-stack development using **React (frontend)** and **Node.js / Express (backend)** with a **REST API architecture**.
+This project demonstrates full-stack development using **React (frontend)** and **Node.js / Express (backend)** with a **REST API architecture**, combined with real-world **LLM (AI) integration**.
 
 ---
 
@@ -13,9 +13,8 @@ This project demonstrates full-stack development using **React (frontend)** and 
 🔗 **Demo:**  
 (Add your Vercel link here)
 
-Example:
+Example:  
 https://travel-planner-app-taupe-beta.vercel.app/
-
 
 ---
 
@@ -23,187 +22,78 @@ https://travel-planner-app-taupe-beta.vercel.app/
 
 The project is **functionally complete**.
 
-Current work focuses mainly on:
-- UI improvements
-- polishing user experience
-- preparing a demo version for portfolio and interviews
+Current work focuses on:
+- UI/UX improvements
+- AI feature enhancements
+- optimizing API usage and performance
+- preparing a polished demo for portfolio and interviews
 
 ---
 
 # ✨ Features
 
-## Trip Management
-- Create trips
-- Edit trips
-- Delete trips
+## 🧳 Trip Management
+- Create, edit, and delete trips
 - View trip history
+- Centralized trip dashboard
 
-## Expense Tracking
-- Add expenses per trip
-- Edit expenses
-- Delete expenses
-- Track travel costs
+## 💰 Expense Tracking
+- Add/edit/delete expenses per trip
+- Track total costs
+- Payers summary (who paid what)
 
-## Task Management (TODO List)
-- Create TODO tasks for each trip
+## ✅ Task Management (TODO List)
+- Create tasks per trip
 - Mark tasks as completed
 - Delete tasks
 
-## Calendar Integration
-- Interactive calendar
-- Add events
-- Color-coded events
+## 📅 Calendar Integration
+- Interactive calendar (FullCalendar)
+- Add and manage events
 - Date selection
+- Event visualization
 
-## Language Learning Page
-- Save new words learned during travel
+## 🌐 Language Learning Page
+- Save new words during travel
 - Add translations
 - LocalStorage persistence
 
-## Full CRUD Operations
+## 🤖 AI Travel Assistant
 
-All entities support:
-
-- Create
-- Read
-- Update
-- Delete
+- Chat-based assistant integrated into the app
+- Supports multiple modes:
+  - Conversation (language practice)
+  - Trip Planning
+  - Information
+  - Translation
+- Context-aware responses based on conversation history
+- Dynamic prompt generation
+- Integrated with **Google Gemini API**
 
 ---
 
 # 🛠 Tech Stack
 
 ## Frontend
-
 - React
 - Vite
 - JavaScript
 - CSS
 - FullCalendar
+- Zustand (state management)
 
 ## Backend
-
 - Node.js
 - Express.js
-- REST API
+- REST API architecture
+
+## AI Integration
+- Google Gemini API
+- Prompt engineering
+- Retry mechanism with exponential backoff
+- Fallback handling for API failures
+- Handling rate limits (quota management)
 
 ---
 
 # 🏗 Architecture Overview
-React Frontend
-     │
-     │ REST API requests
-     ▼
-Node.js / Express Server
-     │
-     ▼
-Data Storage (JSON / Local Storage)
-
-
-The frontend communicates with the backend through REST API endpoints.
-
----
-
-# 📂 Project Structure
-travel-planner-app
-│
-├── frontend
-│   ├── components
-│   ├── pages
-│   ├── styles
-│   └── main.jsx
-│
-└── backend
-    ├── controllers
-    ├── routes
-    ├── services
-    └── server.js
-
-    
----
-
-# 💻 Run Locally
-
-## 1️⃣ Clone the repository
-git clone https://github.com/IdanOshri98/travel-planner-app.git
-cd travel-planner-app
-
----
-
-## 2️⃣ Run Backend Server
-cd backend
-npm install
-node src/server.js
-
-Backend runs on:
-http://localhost:5000
-
----
-
-## 3️⃣ Run Frontend
-
-Open a new terminal:
-cd frontend
-npm install
-npm run dev
-
-Frontend runs on:
-http://localhost:5173
-
-
----
-
-# 🔗 API Communication
-
-The frontend communicates with the backend using **REST API requests**.
-
-Make sure the backend server is running before starting the frontend.
-
----
-
-# 🎯 Purpose of the Project
-
-This project was built to practice and demonstrate:
-
-- Full-stack application development
-- Client-server architecture
-- REST API design
-- React component architecture
-- State management with React Hooks
-- CRUD operations
-- Building scalable project structure
-
----
-
-# 🧠 Challenges & Learning
-
-During the development of this project I learned how to:
-
-- Connect frontend and backend services
-- Design a clean REST API structure
-- Manage application state in React
-- Build reusable UI components
-- Implement interactive calendar functionality
-- Structure a scalable full-stack project
-
----
-
-# 🔮 Future Improvements
-
-Possible next steps for the project:
-
-- User authentication
-- Database integration (MongoDB / PostgreSQL)
-- Mobile responsive UI
-- Better analytics for expenses
-- Production deployment improvements
-
----
-
-# 👨‍💻 Author
-
-**Idan Oshri**
-Computer Science Graduate  
-
-
-
