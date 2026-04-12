@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { fetchTravelFact } from "@/services/ai";
+import { facts } from "../../store/facts";
 
 
 function DailyFact() {
   const [factData, setFactData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [facts, setFacts] = useState(["Traveling improves your creativity and reduces stress"]);
 
 
   useEffect(() => {
@@ -22,7 +22,6 @@ function DailyFact() {
             }else{
                 const data = await fetchTravelFact();
                 const newFact = data.fact;
-                setFacts(prev => [newFact, ...prev]);
                 setFactData(newFact);
             }
            
