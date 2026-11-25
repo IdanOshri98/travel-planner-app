@@ -10,11 +10,7 @@ This project demonstrates full-stack development using **React (frontend)** and 
 
 # 🚀 Live Demo
 
-🔗 **Demo:**  
-(Add your Vercel link here)
-
-Example:  
-https://travel-planner-app-taupe-beta.vercel.app/
+🔗 **Demo:** https://travel-planner-app-taupe-beta.vercel.app/
 
 ---
 
