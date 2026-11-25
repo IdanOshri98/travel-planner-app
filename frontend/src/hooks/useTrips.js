@@ -56,8 +56,10 @@ export function useTrips() {
 
 
 
-  const editTrip = async (id, editedTrip) => {    //////אולי להוריד את זה בהמשך - אני לא רוצה לאפשר עריכה כאן
-    
+  // The hook only manages trip data. UI state (which modal is open, which
+  // screen is shown) belongs to the component that calls it, so these
+  // functions return true/false and let the caller decide what to do next.
+  const editTrip = async (id, editedTrip) => {
     if (DATA_MODE === 'demo') {
       const updatedTrips = trips.map((trip) =>
         trip.id === id ? { ...trip, ...editedTrip } : trip
@@ -65,8 +67,7 @@ export function useTrips() {
 
       setTrips(updatedTrips);
       saveTrips(updatedTrips);
-      setEditingTrip(null);
-      return;
+      return true;
     }
 
     try {
@@ -82,10 +83,11 @@ export function useTrips() {
 
       const updated = await response.json();
       setTrips(prev => prev.map(trip => (trip.id === updated.id ? updated : trip)))
-      setEditingTrip(null)
+      return true;
     }
     catch (error) {
       console.error('Error updating trip:', error)
+      return false;
     }
   }
 
@@ -97,13 +99,7 @@ export function useTrips() {
       const updatedTrips = trips.filter((trip) => trip.id !== id);
       setTrips(updatedTrips);
       saveTrips(updatedTrips);
-
-      if (currentTripId === id) {
-        setCurrentTripId(null);
-        setCurrentView('home');
-        setCurrentTripPage('overview');
-      }
-      return;
+      return true;
     }
 
     try{
@@ -114,14 +110,10 @@ export function useTrips() {
       if(!response.ok)  throw new Error('Failed to delete trip')
       
       setTrips(prev => prev.filter(trip => trip.id !== id));
-
-      if(currentTripId === id) {
-        setCurrentTripId(null)
-        setCurrentView('home')
-        setCurrentTripPage('overview')
-      }
+      return true;
     } catch (error) {
       console.error('Error deleting trip:', error)
+      return false;
     }
   }
   return { trips, addTrip, editTrip, deleteTrip }

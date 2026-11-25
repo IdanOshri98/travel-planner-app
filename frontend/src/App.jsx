@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ToastContainer from "./components/pages/ToastContainer";
 import AppHeader from './components/layout/AppHeader';
 import AddTripModal from './components/pages/AddTripModal';
@@ -82,16 +82,24 @@ function App() {
       travelers: formData.get('travelers')
     }
 
-    editTrip(editingTrip.id, updatedTrip);
+    const ok = await editTrip(editingTrip.id, updatedTrip);
+    if (!ok) return; // keep the modal open so the user's input isn't lost
     setShowAddTripModal(false);
     setEditingTrip(null);
   }
-  
+
 
 
   const handleDeleteTrip = async (id) => {
     if (!window.confirm('Delete this trip?')) return;
-    deleteTrip(id)
+    const ok = await deleteTrip(id);
+
+    // If the deleted trip was the one on screen, go back home.
+    if (ok && currentTripId === id) {
+      setCurrentTripId(null);
+      setCurrentView('home');
+      setCurrentTripPage('overview');
+    }
   };
 
 
@@ -101,7 +109,6 @@ function App() {
   };
 
   const openConversation = (trip) => {
-    console.log("openConversation clicked");
       setCurrentTripId(trip.id);
       setShowConversation(true);
   };
@@ -111,7 +118,6 @@ function App() {
     setCurrentView('tripDetail');
   };
 
-console.log("showConversation:", showConversation);
   return (
     <div className="app">
       <ToastContainer />
