@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { DATA_MODE } from "../../config";
 import { loadWords, saveWords } from "../../utils/wordsStorage";
 import useWordsStore from "../../store/useWordsStore";
+
+// One shared empty array: a new `[]` on every render makes Zustand think
+// the data changed each time (re-render loop warning).
+const EMPTY = [];
 import { fetchWords, createWord, updateWordRating, removeWord } from "../../services/wordService";
 
 
@@ -10,7 +14,7 @@ export default function NewWordsPage({ trip, onBack }) {
   const initialLanguage = trip?.destination || "unknown";
   const [languageInput, setLanguageInput] = useState(initialLanguage);
   const language = normalizeLanguage(languageInput.trim() || initialLanguage);
-  const words = useWordsStore((state) => state.wordsByLanguage[language] || []);
+  const words = useWordsStore((state) => state.wordsByLanguage[language] ?? EMPTY);
 
   const setWords = useWordsStore((state) => state.setWords);
   const addWordToStore = useWordsStore((state) => state.addWordToStore);

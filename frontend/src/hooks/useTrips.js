@@ -2,25 +2,41 @@ import { useState, useEffect } from 'react';
 import { API_BASE, DATA_MODE } from '@/config';
 import { loadTrips, saveTrips } from '@/utils/tripsStorage';
 
+// Everything else saved for a trip in demo mode. Removed together with the
+// trip, so deleted trips don't leave orphaned data in localStorage.
+const TRIP_STORAGE_PREFIXES = ['travel_app_todos_', 'travel_app_expenses_', 'travel_app_events_'];
+
+function removeTripData(id) {
+  try {
+    TRIP_STORAGE_PREFIXES.forEach((prefix) => localStorage.removeItem(prefix + id));
+    sessionStorage.removeItem(`travel_chat_${id}`);
+  } catch {
+    // storage unavailable: nothing to clean
+  }
+}
+
 export function useTrips() {
-  const [trips, setTrips] = useState([]);
+  // In demo mode the trips are read synchronously on the first render, so a
+  // page like /trips/:id never sees an empty list and wrongly says "not found".
+  const [trips, setTrips] = useState(() => (DATA_MODE === 'demo' ? loadTrips() : []));
+  const [status, setStatus] = useState(DATA_MODE === 'demo' ? 'ready' : 'loading');
 
   useEffect(() => {
-    //Demo
-    if (DATA_MODE === 'demo') {
-      const storedTrips = loadTrips();
-      setTrips(storedTrips);
-      return;
-  }
+    if (DATA_MODE === 'demo') return;
 
-    // Fetch trips data from an API or local storage if needed
     fetch(`${API_BASE}/trips`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch trips');
         return res.json();
       })
-      .then(data => setTrips(data))
-      .catch(err => console.error('Error fetching trips:', err))
+      .then((data) => {
+        setTrips(data);
+        setStatus('ready');
+      })
+      .catch((err) => {
+        console.error('Error fetching trips:', err);
+        setStatus('error');
+      });
   }, [])
 
 
@@ -32,7 +48,7 @@ export function useTrips() {
       const updatedTrips = [newTrip, ...trips];
       setTrips(updatedTrips);
       saveTrips(updatedTrips);
-      return;
+      return newTrip;
     }
 
     try {
@@ -48,8 +64,10 @@ export function useTrips() {
  
       const savedTrip = await response.json();
       setTrips(prev => [savedTrip, ...prev])
+      return savedTrip;
    } catch (error) {
       console.error('Error adding trip:', error)
+      return null;
     }
   }
 
@@ -99,6 +117,7 @@ export function useTrips() {
       const updatedTrips = trips.filter((trip) => trip.id !== id);
       setTrips(updatedTrips);
       saveTrips(updatedTrips);
+      removeTripData(id);
       return true;
     }
 
@@ -116,6 +135,6 @@ export function useTrips() {
       return false;
     }
   }
-  return { trips, addTrip, editTrip, deleteTrip }
+  return { trips, status, addTrip, editTrip, deleteTrip }
 
 }

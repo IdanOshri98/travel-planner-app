@@ -46,34 +46,12 @@
     padding: var(--spacing-lg);
   }
   
-  /* כותרת */
-  .header {
-    padding: 0 var(--spacing-md);
-  }
-  
-  .website-name {
-    font-size: var(--font-size-xl);
-    margin-left: var(--spacing-md);
-  }
   
 
   
-  /* אפשרויות טיול */
-  .trip-options {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-  }
   
   /* כפתורים */
-  .form-buttons,
-  .modal-buttons {
-    flex-direction: column;
-  }
-  
-  .form-buttons button,
-  .modal-buttons button {
-    width: 100%;
-  }
+
   
   /* טפסים */
   .add-todo-form {
@@ -95,12 +73,6 @@
     flex-direction: column;
   }
   
-  /* מודאל */
-  .modal-content {
-    width: 95%;
-    max-height: 90vh;
-    padding: var(--spacing-lg);
-  }
 }
 
 /* מכשירים קטנים מאוד */
@@ -110,35 +82,8 @@
     --spacing-xl: 1.5rem;
   }
   
-  .header {
-    padding: 0 var(--spacing-sm);
-  }
-  
-  .hamburger {
-    padding: var(--spacing-xs);
-  }
-  
-  .website-name {
-    font-size: var(--font-size-lg);
-    margin-left: var(--spacing-sm);
-  }
-  
-  .modal-content {
-    padding: var(--spacing-md);
-  }
 }
 
-/* מחשבים גדולים */
-@media (min-width: 1200px) {
-  .trip-options {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  
-  
-  .modal-content {
-    max-width: 600px;
-  }
-}
 
 /* העדפות נגישות */
 @media (prefers-reduced-motion: reduce) {
@@ -154,43 +99,3 @@
   /* ניתן להוסיף כאן סגנונות למצב כהה */
 }
 
-.sidebar,
-.sidebar.open {
-  width: 100%;
-}
-
-@media (max-width: 992px) {
-  .sidebar,
-  .sidebar.open {
-    position: static;
-    width: 100%;
-    height: auto;
-    left: auto;
-    top: auto;
-    box-shadow: none;
-  }
-}
-
-@media (max-width: 768px) {
-  .home-container {
-    padding: 20px 16px;
-    gap: 20px;
-  }
-
-  .home-hero {
-    padding: 24px 18px;
-  }
-
-  .sidebar {
-    padding: 16px;
-  }
-
-  .trip-item {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .trip-actions {
-    align-self: flex-end;
-  }
-}

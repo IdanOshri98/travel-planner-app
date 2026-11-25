@@ -174,6 +174,10 @@ export default function TripCalendar({ trip, onBack }) {
             themeSystem="bootstrap5"
             initialView="dayGridMonth"
             initialDate={initialDate}
+            // The bootstrap5 theme draws arrows with the Bootstrap Icons font,
+            // which isn't installed, so the buttons were blank. Use text instead.
+            buttonIcons={false}
+            buttonText={{ prev: "‹", next: "›", today: "Today", month: "Month", week: "Week", day: "Day" }}
             headerToolbar={{
               left: "prev,next today",
               center: "title",

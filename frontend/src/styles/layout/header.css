@@ -1,35 +1,35 @@
-/* כותרת עליונה */
+/* Top bar: logo links home, "New trip" is always one click away */
 .header {
-  grid-area: header;
-  background: var(--bg-primary);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 60px;
   display: flex;
   align-items: center;
-  padding: 0 var(--spacing-lg);
-  box-shadow: var(--shadow-sm);
-  z-index: 1000;
-  backdrop-filter: blur(10px);
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  padding: 0 max(var(--spacing-lg), calc((100% - 1040px) / 2 + var(--spacing-lg)));
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--color-border);
 }
-
 
 .website-name {
-  margin-left: var(--spacing-lg);
-  color: var(--primary-color);
-  font-size: var(--font-size-xxl);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
-/* אפקטים נוספים לכותרת */
-.header::after {
-  content: '';
-  position: relative;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+.website-name:hover {
+  color: var(--color-primary);
 }
 
+@media (max-width: 600px) {
+  .header {
+    padding: 0 var(--spacing-md);
+  }
+}

@@ -1,14 +1,27 @@
-/* מבנה Grid ראשי של האפליקציה */
+/* App shell: sticky header on top, pages below */
 .app {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 60px 1fr;
-  grid-template-areas:
-    "header"
-    "main";
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Shared page container: same width and gutters on every screen */
+.page {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: var(--spacing-xl) var(--spacing-lg) 96px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: var(--spacing-md) var(--spacing-md) 88px;
+    gap: var(--spacing-md);
+  }
 }
 
 /* מיכלים בסיסיים */

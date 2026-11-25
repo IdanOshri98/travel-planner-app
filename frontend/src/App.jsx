@@ -1,32 +1,39 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { Routes, Route, useNavigate, useMatch, useParams, useLocation } from 'react-router';
 import ToastContainer from "./components/pages/ToastContainer";
 import AppHeader from './components/layout/AppHeader';
+import ChatLauncher from './components/layout/ChatLauncher';
 import AddTripModal from './components/pages/AddTripModal';
-import MainContent from './components/layout/MainContent';
-
+import ConfirmDialog from './components/ui/ConfirmDialog';
+import HomePage from './components/pages/HomePage';
+import TripDetailPage from './components/pages/TripDetailPage';
+import TodoListPage from './components/pages/TodoList';
+import BudgetManagement from './components/pages/Budget';
+import TripCalendar from './components/pages/TripCalendar';
+import NewWordsPage from './components/pages/newWords';
+import NotFound from './components/pages/NotFound';
 import ConversationMode from '@/components/pages/ConversationMode';
 import { useTrips } from './hooks/useTrips';
+import useToastStore from './store/useToastStore';
 
-
-// ===== סטיילים בסיסיים =====
+// ===== Base styles =====
 import './styles/base/reset.css';
 import './styles/base/variables.css';
 import './styles/base/typography.css';
 import './styles/base/layout.css';
 
-// ===== מבנה עמוד =====
+// ===== Layout =====
 import './styles/layout/header.css';
-import './styles/layout/tripList.css';
 import './styles/layout/responsive.css';
 
-// ===== רכיבים =====
+// ===== Components =====
 import './styles/components/buttons.css';
 import './styles/components/forms.css';
 import './styles/components/modals.css';
 import './styles/components/cards.css';
 import './styles/components/animations.css';
 
-// ===== עמודים =====
+// ===== Pages =====
 import './styles/pages/trip-detail.css';
 import './styles/pages/budget.css';
 import './styles/pages/todo.css';
@@ -35,132 +42,159 @@ import "./styles/pages/newWords.css";
 import "./styles/pages/homePage.css";
 import "./styles/pages/conversationMode.css";
 
+// Finds the trip named in the URL (/trips/:tripId/...) and renders the page
+// for it, or a loading / not-found state. Every trip page goes through here,
+// so the trip always comes from the same shared list (no stale copies).
+function TripRoute({ trips, status, render }) {
+  const { tripId } = useParams();
+  const trip = trips.find((t) => String(t.id) === tripId);
 
+  if (!trip && status === 'loading') {
+    return (
+      <main className="page" aria-busy="true">
+        <div className="state-box"><p>Loading trip…</p></div>
+      </main>
+    );
+  }
+  if (!trip) {
+    return <NotFound title="Trip not found" message="It may have been deleted, or the link is wrong." />;
+  }
+  return render(trip);
+}
 
 function App() {
-  // State for sidebar open/closed
-  const [showAddTripModal, setShowAddTripModal] = useState(false);
-  const [currentTripId, setCurrentTripId] = useState(null);
-  const [currentView, setCurrentView] = useState('home');
-  const [currentTripPage, setCurrentTripPage] = useState('overview');
-  const [editingTrip, setEditingTrip] = useState(null);
-  const { trips, addTrip, editTrip, deleteTrip } = useTrips();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const addToast = useToastStore((state) => state.addToast);
+  const { trips, status, addTrip, editTrip, deleteTrip } = useTrips();
 
-  const [showConversation, setShowConversation] = useState(false);
+  const [tripForm, setTripForm] = useState({ open: false, trip: null });
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [chat, setChat] = useState({ open: false, tripId: null });
 
+  // The trip in the URL, if any. Used as the chat's default trip.
+  const tripMatch = useMatch('/trips/:tripId/*');
+  const urlTripId = tripMatch?.params.tripId ?? null;
 
+  // New page = start at the top (a client-side navigation keeps the old scroll).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
+  const openNewTrip = useCallback(() => setTripForm({ open: true, trip: null }), []);
+  const openEditTrip = useCallback((trip) => setTripForm({ open: true, trip }), []);
+  const closeTripForm = useCallback(() => setTripForm({ open: false, trip: null }), []);
 
-
-  const handleAddTrip = async (e) => {
-    e.preventDefault()
-    const formData = new FormData(e.target)
-    const newTrip = {
-      id: crypto.randomUUID(),
-      destination: formData.get('destination'),
-      startDate: formData.get('startDate'),
-      endDate: formData.get('endDate'),
-      budget: Number(formData.get('budget')),
-      travelers: formData.get('travelers')
+  const saveTrip = async (fields) => {
+    if (tripForm.trip) {
+      const ok = await editTrip(tripForm.trip.id, fields);
+      if (ok) {
+        closeTripForm();
+        addToast({ message: 'Trip updated', type: 'success' });
+      }
+      return ok;
     }
 
-    addTrip(newTrip)
-    setShowAddTripModal(false)
-  };
-
-
-
-
-  const handleEditTrip = async (e) => {    
-    e.preventDefault()
-    const formData = new FormData(e.target)
-    const updatedTrip = {
-      destination: formData.get('destination'),
-      startDate: formData.get('startDate'),
-      endDate: formData.get('endDate'),
-      budget: Number(formData.get('budget')),
-      travelers: formData.get('travelers')
+    const created = await addTrip({ id: crypto.randomUUID(), ...fields });
+    if (created) {
+      closeTripForm();
+      addToast({ message: 'Trip created', type: 'success' });
+      navigate(`/trips/${created.id}`);
     }
+    return Boolean(created);
+  };
 
-    const ok = await editTrip(editingTrip.id, updatedTrip);
-    if (!ok) return; // keep the modal open so the user's input isn't lost
-    setShowAddTripModal(false);
-    setEditingTrip(null);
-  }
-
-
-
-  const handleDeleteTrip = async (id) => {
-    if (!window.confirm('Delete this trip?')) return;
-    const ok = await deleteTrip(id);
-
-    // If the deleted trip was the one on screen, go back home.
-    if (ok && currentTripId === id) {
-      setCurrentTripId(null);
-      setCurrentView('home');
-      setCurrentTripPage('overview');
+  const confirmDelete = async () => {
+    const trip = pendingDelete;
+    setPendingDelete(null);
+    const ok = await deleteTrip(trip.id);
+    if (!ok) {
+      addToast({ message: "Couldn't delete the trip", type: 'error' });
+      return;
     }
+    addToast({ message: `${trip.destination} deleted`, type: 'success' });
+    // If we were inside the deleted trip, go back to the list.
+    if (String(trip.id) === urlTripId) navigate('/');
+    if (String(trip.id) === String(chat.tripId)) setChat({ open: false, tripId: null });
   };
+  const cancelDelete = useCallback(() => setPendingDelete(null), []);
 
+  const openChat = useCallback((trip) => setChat({ open: true, tripId: trip?.id ?? urlTripId }), [urlTripId]);
+  const closeChat = useCallback(() => setChat((c) => ({ ...c, open: false })), []);
 
-  const openAddTripModal = () => {
-      setEditingTrip(null);
-      setShowAddTripModal(true);
-  };
+  const chatTrip = trips.find((t) => String(t.id) === String(chat.tripId));
 
-  const openConversation = (trip) => {
-      setCurrentTripId(trip.id);
-      setShowConversation(true);
-  };
-
-  // Stable function, so the chat's Escape-key listener isn't re-attached on every render.
-  const closeConversation = useCallback(() => setShowConversation(false), []);
-
-  const selectTrip = (id) => {
-    setCurrentTripId(id);
-    setCurrentView('tripDetail');
-  };
+  const tripPage = (render) => <TripRoute trips={trips} status={status} render={render} />;
+  const backTo = (trip) => () => navigate(`/trips/${trip.id}`);
 
   return (
     <div className="app">
       <ToastContainer />
+      <AppHeader onNewTrip={openNewTrip} />
 
-      <AppHeader  />
-      
-      {/* Main Map Area */}
-      <MainContent
-        currentView={currentView}
-        currentTripPage={currentTripPage}
-        trips={trips}
-        currentTripId={currentTripId}
-        setCurrentView={setCurrentView}
-        setCurrentTripPage={setCurrentTripPage}
-        setEditingTrip={setEditingTrip}
-        selectTrip={selectTrip}
-        handleDeleteTrip={handleDeleteTrip}
-        setShowAddTripModal={setShowAddTripModal}
-        setShowConversation={setShowConversation}
-        openAddTripModal={openAddTripModal}
-        openConversation={openConversation}
-      />
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <HomePage
+              trips={trips}
+              status={status}
+              onAddTrip={openNewTrip}
+              onEditTrip={openEditTrip}
+              onDeleteTrip={setPendingDelete}
+              onChat={openChat}
+            />
+          }
+        />
+        <Route
+          path="/trips/:tripId"
+          element={tripPage((trip) => <TripDetailPage trip={trip} onEditTrip={openEditTrip} onChat={openChat} />)}
+        />
+        <Route
+          path="/trips/:tripId/todos"
+          element={tripPage((trip) => <TodoListPage trip={trip} onBack={backTo(trip)} />)}
+        />
+        <Route
+          path="/trips/:tripId/budget"
+          element={tripPage((trip) => <BudgetManagement trip={trip} onBack={backTo(trip)} />)}
+        />
+        <Route
+          path="/trips/:tripId/schedule"
+          element={tripPage((trip) => <TripCalendar trip={trip} onBack={backTo(trip)} />)}
+        />
+        <Route
+          path="/trips/:tripId/words"
+          element={tripPage((trip) => <NewWordsPage trip={trip} onBack={backTo(trip)} />)}
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
 
-      {/* Add Trip Modal */}
       <AddTripModal
-        isOpen={showAddTripModal}
-        editingTrip={editingTrip}
-        onClose={() => setShowAddTripModal(false)}
-        onSubmit={editingTrip ? handleEditTrip : handleAddTrip}
+        isOpen={tripForm.open}
+        editingTrip={tripForm.trip}
+        onClose={closeTripForm}
+        onSave={saveTrip}
       />
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title={`Delete ${pendingDelete?.destination ?? 'this trip'}?`}
+        message="Its budget, to-dos and schedule will be deleted too. This can't be undone."
+        confirmLabel="Delete trip"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+      />
+
+      <ChatLauncher onClick={() => openChat()} hidden={chat.open} />
 
       <ConversationMode
-        isOpen={showConversation}
-        onClose={closeConversation}
-        destination={trips.find(t => t.id === currentTripId)?.destination}
-        chatKey={currentTripId ?? "general"}
+        isOpen={chat.open}
+        onClose={closeChat}
+        destination={chatTrip?.destination}
+        chatKey={chatTrip ? String(chatTrip.id) : 'general'}
       />
-      
     </div>
-  )
+  );
 }
 
 export default App

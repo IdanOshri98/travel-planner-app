@@ -1,71 +1,205 @@
-/* עמוד פרטי טיול */
-.trip-detail-page {
-  padding: var(--spacing-xl);
-  background: var(--bg-primary);
-  margin: var(--spacing-lg);
-  border-radius: var(--border-radius-xl);
-  box-shadow: var(--shadow-xl);
-  backdrop-filter: blur(10px);
-}
-
-.trip-detail-header {
+/* ===== Trip dashboard ===== */
+.breadcrumb {
   display: flex;
-  align-items: center;
-  margin-bottom: var(--spacing-xl);
-  gap: var(--spacing-md);
+  gap: 6px;
+  margin-bottom: -10px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
-.trip-detail-header h1 {
-  color: var(--primary-color);
-  margin: 0;
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-bold);
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* מידע על הטיול */
-.trip-info {
-  margin-bottom: var(--spacing-xl);
-  padding: var(--spacing-lg);
-  background: var(--bg-secondary);
-  border-radius: var(--border-radius-lg);
-  border: 2px solid rgba(102, 126, 234, 0.1);
-}
-
-.trip-info p {
-  font-size: var(--font-size-lg);
-  margin-bottom: var(--spacing-sm);
-  color: var(--text-secondary);
+.breadcrumb a {
+  color: var(--color-primary);
   font-weight: var(--font-weight-medium);
 }
 
-/* אפשרויות טיול */
-.trip-options {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+.breadcrumb a:hover {
+  text-decoration: underline;
 }
 
+.trip-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
 
-@media (max-width: 768px) {
-  .trip-detail-page {
-    margin: var(--spacing-md);
-    padding: var(--spacing-lg);
+.trip-page-head h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+}
+
+.trip-page-dates {
+  margin: 4px 0 0;
+  color: var(--color-text-muted);
+}
+
+.trip-page-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Four status cards: the answers to "where do I stand?" */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  min-height: 118px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: inherit;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+a.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #cfd4e4;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.stat-card strong {
+  font-size: 1.6rem;
+  line-height: 1.2;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card strong.over {
+  color: var(--color-danger);
+}
+
+.stat-card strong.stat-text {
+  font-size: var(--font-size-lg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-card strong.muted {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+.stat-sub {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.stat-card .meter {
+  margin: 4px 0 2px;
+}
+
+.stat-card.status-upcoming strong {
+  color: var(--color-primary);
+}
+
+.stat-card.status-now strong {
+  color: var(--color-success);
+}
+
+/* Sections of the trip (real links: keyboard and middle-click work) */
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.section-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: inherit;
+  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.section-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #cfd4e4;
+}
+
+.section-card > span:nth-child(2) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.section-card strong {
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+}
+
+.section-icon {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+}
+
+.section-hint {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.section-arrow {
+  color: var(--color-text-muted);
+  font-size: 18px;
+}
+
+@media (max-width: 860px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
-  
-  .trip-options {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-md);
-  }
-  
-  .trip-detail-header {
-    flex-direction: column;
+}
+
+@media (max-width: 600px) {
+  .trip-page-head {
     align-items: flex-start;
-    gap: var(--spacing-md);
+  }
+  .trip-page-actions {
+    width: 100%;
+  }
+  .trip-page-actions .btn {
+    flex: 1;
+  }
+  .stat-grid {
+    gap: 10px;
+  }
+  .stat-card {
+    min-height: 104px;
+    padding: 12px;
+  }
+  .stat-card strong {
+    font-size: 1.35rem;
+  }
+  .section-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 }

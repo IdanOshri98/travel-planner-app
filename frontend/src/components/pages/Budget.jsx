@@ -5,18 +5,22 @@ import useExpenseStore from "../../store/useExpenseStore";
 import useToastStore from "../../store/useToastStore";
 import { fetchExpenses, createExpense, updateExpense, removeExpense, fetchPayersSummary } from "../../services/expenseService";
 
+// One shared empty array: a new `[]` on every render makes Zustand think
+// the data changed each time (re-render loop warning).
+const EMPTY = [];
+
 
 export default function BudgetManagement({trip, onBack}) {
 
   const expenses = useExpenseStore(
-    (state) => state.expensesByTrip[trip.id] || []
+    (state) => state.expensesByTrip[trip.id] ?? EMPTY
   );
   const setExpenses = useExpenseStore((state) => state.setExpenses);
   const addExpenseToStore = useExpenseStore((state) => state.addExpense);
   const updateExpenseInStore = useExpenseStore((state) => state.updateExpense);
   const deleteExpenseFromStore = useExpenseStore((state) => state.deleteExpense);
   const payers = useExpenseStore(
-    (state) => state.payersByTrip[trip.id] || []
+    (state) => state.payersByTrip[trip.id] ?? EMPTY
   );
   const setPayers = useExpenseStore((state) => state.setPayers);
   const addToast = useToastStore((state) => state.addToast);
