@@ -6,6 +6,8 @@ import interactionPlugin from "@fullcalendar/interaction";
 import bootstrap5Plugin from "@fullcalendar/bootstrap5";
 import { API_BASE, DATA_MODE } from "../../config";
 import { loadEvents, saveEvents } from "../../utils/eventsStorage";
+import { parseTripDate, toISODate } from "../../utils/dates";
+import useToastStore from "../../store/useToastStore";
 
 
 const COLOR_OPTIONS = [
@@ -26,9 +28,16 @@ function toFullCalendarEvent(e) {
   };
 }
 
-export default function TripCalendar({ onBack }) {
+export default function TripCalendar({ trip, onBack }) {
+  const tripId = trip?.id;
+  const addToast = useToastStore((state) => state.addToast);
 
+  // Raw events as saved; FullCalendar's color fields are added only for display.
   const [events, setEvents] = useState([]);
+  const calendarEvents = useMemo(() => events.map(toFullCalendarEvent), [events]);
+
+  // Open the calendar on the trip's first day instead of today.
+  const initialDate = toISODate(parseTripDate(trip?.startDate)) || undefined;
 
   // Modal state
   const [isOpen, setIsOpen] = useState(false);
@@ -42,29 +51,25 @@ export default function TripCalendar({ onBack }) {
   });
 
 
-  useEffect(()=>{
-    async function fetchEvents() {
+  useEffect(() => {
+    if (!tripId) return;
 
-      if (DATA_MODE === "demo") {
-        const storedEvents = loadEvents();
-        setEvents(storedEvents.map(toFullCalendarEvent));
-        return;
+    if (DATA_MODE === "demo") {
+      setEvents(loadEvents(tripId));
+      return;
     }
 
-      try{
-        const res = await fetch(`${API_BASE}/events`);
-        if(!res.ok){
-          console.error("GET /events failed:", res.status);
-          return;
-        }
-        const data = await res.json();
-        setEvents(data.map(toFullCalendarEvent));
-      }catch(err){
-        console.error("Failed to load events:", err);
-      }
-    }
-    fetchEvents();
-  },[]);
+    fetch(`${API_BASE}/trips/${tripId}/events`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`GET events failed: ${res.status}`);
+        return res.json();
+      })
+      .then(setEvents)
+      .catch((err) => {
+        console.error(err);
+        addToast({ message: "Couldn't load the schedule", type: "error" });
+      });
+  }, [tripId, addToast]);
 
 
 
@@ -101,59 +106,49 @@ export default function TripCalendar({ onBack }) {
     }
 
     if (DATA_MODE === "demo") {
-      const updatedEvents = [...events, toFullCalendarEvent(createdEvent)];
+      const updatedEvents = [...events, createdEvent];
       setEvents(updatedEvents);
-      saveEvents(updatedEvents);
+      saveEvents(tripId, updatedEvents);
       setIsOpen(false);
+      addToast({ message: "Event added", type: "success" });
       return;
     }
 
-    try{
-      const res= await fetch(`${API_BASE}/events`,{
+    try {
+      const res = await fetch(`${API_BASE}/trips/${tripId}/events`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(createdEvent),
       });
-
-      if(!res.ok){
-        const text = await res.text().catch(() => "");
-        console.error("POST /events failed:", res.status, text);
-        alert("Failed to save event (check backend logs)");
-        return;
-      }
+      if (!res.ok) throw new Error(`POST event failed: ${res.status}`);
 
       const saved = await res.json();
-      setEvents((prev) => [...prev, toFullCalendarEvent(saved)]);
+      setEvents((prev) => [...prev, saved]);
       setIsOpen(false);
-    }catch(err){
-        console.error("Failed to save event: ", err);
-        alert("Failed to save event (network error).")
+      addToast({ message: "Event added", type: "success" });
+    } catch (err) {
+      console.error(err);
+      addToast({ message: "Couldn't save the event. Please try again.", type: "error" });
     }
   }
 
-  async function deleteEventById(id){
-
+  async function deleteEventById(id) {
     if (DATA_MODE === "demo") {
       const updatedEvents = events.filter((e) => e.id !== id);
       setEvents(updatedEvents);
-      saveEvents(updatedEvents);
+      saveEvents(tripId, updatedEvents);
       return true;
     }
 
-    try{
-      const res= await fetch(`${API_BASE}/events/${id}`,{ method: "DELETE" });
-
-      if(!res.ok){
-        const text = await res.text().catch(() => "");
-        console.error("DELETE /events failed:", res.status, text);
-        return false;
-      }
+    try {
+      const res = await fetch(`${API_BASE}/trips/${tripId}/events/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`DELETE event failed: ${res.status}`);
       setEvents((prev) => prev.filter((e) => e.id !== id));
       return true;
-    } catch(err){
-        console.error("Failed to delete event:", err);
-        alert("Failed to delete event (network error).");
-        return false;
+    } catch (err) {
+      console.error(err);
+      addToast({ message: "Couldn't delete the event.", type: "error" });
+      return false;
     }
   }
 
@@ -178,13 +173,14 @@ export default function TripCalendar({ onBack }) {
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, bootstrap5Plugin]}
             themeSystem="bootstrap5"
             initialView="dayGridMonth"
+            initialDate={initialDate}
             headerToolbar={{
               left: "prev,next today",
               center: "title",
               right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             nowIndicator={true}
-            events={events}
+            events={calendarEvents}
             eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
             dateClick={(info) => openModalForDate(info.dateStr)}
             eventClick={async (clickInfo) => {

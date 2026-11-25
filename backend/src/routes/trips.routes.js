@@ -3,6 +3,7 @@ import tripsCtrl from '../controllers/trips.controller.js';
 import todosCtrl from '../controllers/todos.controller.js';
 import expensesCtrl from '../controllers/expenses.controller.js';
 import wordsCtrl from '../controllers/newWords.controller.js'
+import eventsCtrl from '../controllers/events.controller.js';
 
 const router = express.Router();
 
@@ -36,6 +37,12 @@ router.post('/:id/words', wordsCtrl.createWord);
 router.get('/:id/words', wordsCtrl.getWords);
 router.patch('/:tripId/words/:wordId', wordsCtrl.editWord);
 router.delete('/:tripId/words/:wordId', wordsCtrl.deleteWord);
+
+
+// Calendar events (nested: each trip has its own)
+router.get('/:id/events', eventsCtrl.getEvents);
+router.post('/:id/events', eventsCtrl.createEvent);
+router.delete('/:tripId/events/:eventId', eventsCtrl.deleteEvent);
 
 
 export default router;

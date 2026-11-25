@@ -1,6 +1,6 @@
 let trips = [
-    { id: 1, destination: 'Thailand', todos: [], expenses: [], payers: [] , words: []},
-    { id: 2, destination: 'Mexico', todos: [], expenses: [], payers: [] , words: []}
+    { id: 1, destination: 'Thailand', todos: [], expenses: [], payers: [] , words: [], events: []},
+    { id: 2, destination: 'Mexico', todos: [], expenses: [], payers: [] , words: [], events: []}
 ];
 
 export function getTrips() {

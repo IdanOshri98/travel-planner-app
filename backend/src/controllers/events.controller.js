@@ -1,17 +1,35 @@
-import { getAllEvents, addEvent, deleteEventById } from "../data/events.store.js";
+import tripsStore from "../data/trips.store.js";
+const { findTripById } = tripsStore;
+
+// Events belong to a trip (like todos and expenses), so two trips never
+// share or mix their calendars.
 
 function isValidTimeStr(t) {
   return typeof t === "string" && /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2})?$/.test(t);
 }
 
-export function getEvents(req, res) {
-  res.json(getAllEvents());
+function getTripOr404(req, res) {
+  const trip = findTripById(Number(req.params.id ?? req.params.tripId));
+  if (!trip) {
+    res.status(404).json({ message: "Trip not found" });
+    return null;
+  }
+  if (!Array.isArray(trip.events)) trip.events = [];
+  return trip;
 }
 
-export function createEvent(req, res) {
+function getEvents(req, res) {
+  const trip = getTripOr404(req, res);
+  if (!trip) return;
+  res.json(trip.events);
+}
+
+function createEvent(req, res) {
+  const trip = getTripOr404(req, res);
+  if (!trip) return;
+
   const { title, start, end, allDay, color } = req.body ?? {};
 
-  // ולידציה מינימלית
   if (!title || typeof title !== "string" || !title.trim()) {
     return res.status(400).json({ message: "title is required" });
   }
@@ -23,7 +41,7 @@ export function createEvent(req, res) {
   }
 
   const event = {
-    id: Date.now().toString(),
+    id: crypto.randomUUID(),
     title: title.trim(),
     start,
     end: end || undefined,
@@ -31,16 +49,21 @@ export function createEvent(req, res) {
     color: color || "#2563eb",
   };
 
-  addEvent(event);
+  trip.events.push(event);
   return res.status(201).json(event);
 }
 
-export function deleteEvent(req, res) {
-  const { id } = req.params;
-  const removed = deleteEventById(id);
+function deleteEvent(req, res) {
+  const trip = getTripOr404(req, res);
+  if (!trip) return;
 
-  if (!removed) {
+  const before = trip.events.length;
+  trip.events = trip.events.filter((e) => e.id !== req.params.eventId);
+
+  if (trip.events.length === before) {
     return res.status(404).json({ message: "Event not found" });
   }
   return res.sendStatus(204);
 }
+
+export default { getEvents, createEvent, deleteEvent };

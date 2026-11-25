@@ -23,7 +23,9 @@ function createTrip(req, res) {
     travelers,
     todos: [],
     expenses: [],
-    payers: []
+    payers: [],
+    words: [],
+    events: []
   };
 
   const trips = getTrips();
