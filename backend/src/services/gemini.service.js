@@ -18,8 +18,16 @@ const MODELS = [
 
 // Hard ceiling on answer length. The prompt asks for short answers; this
 // guarantees it even when the model ignores the prompt.
-const CHAT_MAX_OUTPUT_TOKENS = 300;
+const CHAT_MAX_OUTPUT_TOKENS = 250;
 const HISTORY_LIMIT = 12;
+
+function trimToLastSentence(text) {
+  const lastEnd = Math.max(
+    ...[".", "!", "?", "。", "\n"].map((c) => text.lastIndexOf(c))
+  );
+  // Only trim if a reasonable part of the answer survives.
+  return lastEnd > text.length * 0.4 ? text.slice(0, lastEnd + 1).trim() : text;
+}
 
 async function generateWithRetry({ contents, systemInstruction, maxOutputTokens }) {
   let lastError = null;
@@ -37,9 +45,15 @@ async function generateWithRetry({ contents, systemInstruction, maxOutputTokens 
           },
         });
 
-        const text = response.text?.trim();
+        let text = response.text?.trim();
         if (!text) {
           throw new Error("Empty response from Gemini");
+        }
+
+        // Hit the token cap: drop the half-written last sentence instead of
+        // showing an answer that stops mid-word.
+        if (response.candidates?.[0]?.finishReason === "MAX_TOKENS") {
+          text = trimToLastSentence(text);
         }
 
         return text;
@@ -87,7 +101,7 @@ Rules:
 // a narrow chat panel.
 const STYLE_RULES = `
 Answer style (always follow):
-- Keep it short: 2–4 sentences, under 80 words.
+- Keep it short: 2–3 sentences, under 60 words. Short sentences.
 - If a list really helps, use at most 4 short items, one per line, starting with "- ".
 - Plain text only: no markdown headings, no bold, no asterisks.
 - Answer only what was asked. If there is more worth sharing, end with one short offer such as "Want more details?"

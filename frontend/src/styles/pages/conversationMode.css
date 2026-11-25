@@ -157,8 +157,11 @@
   word-break: break-word;
 }
 
-.chat-message p {
+.chat-message p,
+.chat-message li {
   margin: 0;
+  /* typography.css gives every <p> a grey color; bubbles set their own */
+  color: inherit;
 }
 
 .chat-message p + p,
