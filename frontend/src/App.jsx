@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import ToastContainer from "./components/pages/ToastContainer";
 import AppHeader from './components/layout/AppHeader';
 import AddTripModal from './components/pages/AddTripModal';
@@ -113,6 +113,9 @@ function App() {
       setShowConversation(true);
   };
 
+  // Stable function, so the chat's Escape-key listener isn't re-attached on every render.
+  const closeConversation = useCallback(() => setShowConversation(false), []);
+
   const selectTrip = (id) => {
     setCurrentTripId(id);
     setCurrentView('tripDetail');
@@ -151,8 +154,9 @@ function App() {
 
       <ConversationMode
         isOpen={showConversation}
-        onClose={() => setShowConversation(false)}
+        onClose={closeConversation}
         destination={trips.find(t => t.id === currentTripId)?.destination}
+        chatKey={currentTripId ?? "general"}
       />
       
     </div>
