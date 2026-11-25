@@ -3,7 +3,7 @@ import { generateRandomTravelFact, generateTravelChat } from "../services/gemini
 export async function getRandomFact(req, res, next) {
   try {
     const result = await generateRandomTravelFact();
-    res.json({fact: result});
+    res.json({reply: result});
   } catch (error) {
     next(error);
   }
@@ -17,7 +17,7 @@ export async function handleChat(req, res, next) {
 
     // Here you would integrate with your AI service (e.g., OpenAI, Gemini) to get a response based on the message, mode, and destination.
     // For demonstration, we'll return a simple echo response.
-    res.json({ response });
+    res.json({reply: response });
   } catch (error) {
     next(error);
   }

@@ -55,7 +55,9 @@ function ConversationMode({ isOpen, onClose, destination }) {
        const errMsg = {
         id: Date.now() + 1,
         sender: "ai",
-        text: "Sorry, something went wrong. Please try again.",
+        text: error instanceof Error
+          ? error.message
+          : "Sorry, something went wrong. Please try again.",
       };
       setMessages((prev) => [...prev, errMsg]);
     } finally {

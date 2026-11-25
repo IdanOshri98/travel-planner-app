@@ -1,5 +1,15 @@
 import { API_BASE } from "../config";
 
+function readReply(data) {
+  const reply = data?.reply;
+
+  if (typeof reply !== "string" || reply.trim() === "") {
+    throw new Error("The server returned an empty or invalid reply.");
+  }
+
+  return reply;
+}
+
 export async function fetchTravelFact() {
   const response = await fetch(`${API_BASE}/ai/fact`);
 
@@ -8,7 +18,8 @@ export async function fetchTravelFact() {
   }
 
   const data = await response.json();
-  return data.reply;}
+  return readReply(data);
+}
 
 export async function sendChatMessage({message, mode, destination, messages}) {
   const response = await fetch(`${API_BASE}/ai/chat`, {
@@ -24,6 +35,6 @@ export async function sendChatMessage({message, mode, destination, messages}) {
   }
 
   const data = await response.json();
-  return data.reply;
+  return readReply(data);
   
 }
