@@ -20,7 +20,7 @@ function createExpense(req, res) {
     endDate,
     repeat,
     category,
-    payedBy
+    paidBy
   }= req.body;
   
   if (!description) return res.status(400).json({ message: 'title is required' });
@@ -50,16 +50,16 @@ function createExpense(req, res) {
     endDate,
     repeat,
     category,
-    payedBy,
+    paidBy,
     totalDays,
     costPerDayUSD,
   }
 
   trip.expenses.push(newExpense);
-  if (!trip.payers.some(p => p.name === payedBy)) {
-    trip.payers.push({ name: payedBy, totalPaid: numAmount });}
+  if (!trip.payers.some(p => p.name === paidBy)) {
+    trip.payers.push({ name: paidBy, totalPaid: numAmount });}
   else {
-    const payer = trip.payers.find(p => p.name === payedBy);
+    const payer = trip.payers.find(p => p.name === paidBy);
     payer.totalPaid += numAmount;
   }
 
@@ -110,7 +110,9 @@ function patchExpense(req, res) {
     updatedExpense.costPerDayUSD = Number((updatedExpense.amount / totalDays).toFixed(2));
   }
 
-  trip.expenses[idx] = { ...trip.expenses[idx], ...patch };
+  // Save the same object we return, including the recomputed totalDays and
+  // costPerDayUSD. Rebuilding it from `patch` here would drop those fields.
+  trip.expenses[idx] = updatedExpense;
   recomputePayers(trip);
   res.json(updatedExpense);
 }
@@ -143,7 +145,7 @@ function recomputePayers(trip) {
   const updatePayers = new Map();
 
   for (const exp of (trip.expenses || [])) {
-    const name = (exp.payedBy || '').trim();
+    const name = (exp.paidBy || '').trim();
     if (!name) continue;
 
     const amount = Number(exp.amount);

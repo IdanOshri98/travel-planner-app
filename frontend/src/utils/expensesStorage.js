@@ -20,11 +20,29 @@ export function saveExpenses(tripId, expenses) {
   }
 }
 
+// Same calculation as calculateDays in the backend's expenses.controller.js,
+// so demo mode and server mode show the same per-day cost.
+function calculateDays(start, end) {
+  if (!end) return 1;
+  return Math.ceil((new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24)) + 1;
+}
+
+export function withDailyCost(expense) {
+  const amount = Number(expense.amount || 0);
+  const totalDays = calculateDays(expense.startDate, expense.repeat ? expense.endDate : null);
+  return {
+    ...expense,
+    amount,
+    totalDays,
+    costPerDayUSD: Number((amount / totalDays).toFixed(2)),
+  };
+}
+
 export function getPayersSummary(expenses) {
   const totals = {};
 
   for (const exp of expenses) {
-    const payer = (exp.payedBy || "").trim();
+    const payer = (exp.paidBy || "").trim();
     if (!payer) continue;
 
     const amount = Number(exp.amount || 0);

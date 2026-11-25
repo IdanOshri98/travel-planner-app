@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DATA_MODE } from "../../config";
-import { loadExpenses, saveExpenses, getPayersSummary } from "../../utils/expensesStorage";
+import { loadExpenses, saveExpenses, getPayersSummary, withDailyCost } from "../../utils/expensesStorage";
 import useExpenseStore from "../../store/useExpenseStore";
 import useToastStore from "../../store/useToastStore";
 import { fetchExpenses, createExpense, updateExpense, removeExpense, fetchPayersSummary } from "../../services/expenseService";
@@ -60,7 +60,7 @@ export default function BudgetManagement({trip, onBack}) {
     const formData = new FormData(e.target)
     const amount = parseFloat(formData.get('amount'));
 
-    const newExpense = {
+    const newExpense = withDailyCost({
           id: crypto.randomUUID(),
           description: formData.get('description'),       
           amount : amount,
@@ -70,8 +70,7 @@ export default function BudgetManagement({trip, onBack}) {
           repeat : showEndDate,
           category : formData.get('category'),
           paidBy : formData.get('paidBy'),
-          costPerDayUSD: amount,
-        }
+        })
 
     if (DATA_MODE === "demo") {
       addExpenseToStore(trip.id, newExpense);
@@ -107,12 +106,10 @@ const handleEditExpense = async (id) => {
     if (!expToUpdate) return
 
   //DEMO
-  const normalizedExpense = {
+  const normalizedExpense = withDailyCost({
     ...expToUpdate,
     ...editFormData,
-    amount: Number(editFormData.amount ?? expToUpdate.amount ?? 0),
-    costPerDayUSD: Number(editFormData.amount ?? expToUpdate.amount ?? 0),
-  };
+  });
 
   if (DATA_MODE === "demo") {
     updateExpenseInStore(trip.id, id, normalizedExpense);

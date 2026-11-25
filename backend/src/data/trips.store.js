@@ -27,10 +27,6 @@ export function nextExpenseId(trip) {
   return trip.expenses.length ? Math.max(...trip.expenses.map(e => e.id)) + 1 : 1;
 }
 
-export function setPayers(payers) {
-  setPayers(payers);
-}
-
 export function nextWordId(trip){
   return trip.words.length ? Math.max(...trip.words.map(e => e.id)) + 1 : 1;
 }
