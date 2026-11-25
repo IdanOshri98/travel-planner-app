@@ -10,11 +10,22 @@ import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
 
-app.use(cors());
+const productionOrigin = 'https://travel-planner-app-taupe-beta.vercel.app';
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production'
+    ? productionOrigin
+    : [productionOrigin, 'http://localhost:5173'],
+}));
+
 app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('the server is working!');
+});
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok' });
 });
 
 app.use('/trips', tripsRoutes);
